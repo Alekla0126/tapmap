@@ -35,6 +35,29 @@ jobs:
     - name: Build the web app
       run: flutter build web --base-href="${{ env.BASE_HREF }}"
 
+    - name: Create CORS Proxy Page
+      run: |
+        echo '<!DOCTYPE html>
+        <html>
+        <head>
+            <title>CORS Proxy</title>
+        </head>
+        <body>
+            <script>
+                const corsAnywhere = "https://cors-anywhere.herokuapp.com/";
+                const targetUrl = "https://alekla0126.github.io/tapmap/"; // Your actual URL
+                
+                async function fetchWithCors(url) {
+                    const response = await fetch(corsAnywhere + url);
+                    const data = await response.text(); // Use text() if expecting HTML
+                    console.log(data);
+                }
+                
+                fetchWithCors(targetUrl);
+            </script>
+        </body>
+        </html>' > build/web/cors-proxy.html
+
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       with:
