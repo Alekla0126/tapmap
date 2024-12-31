@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "309304960212",
+    "project_id": "tap-map-6c884",
+    "storage_bucket": "tap-map-6c884.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:309304960212:android:7e490a4256c8f9b72e8741",
+        "android_client_info": {
+          "package_name": "com.alekla.tapmap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCf1gBR96e1qgKr1rvZIA7POxvGS2caVk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:309304960212:android:a4be5c5e4e9df1e22e8741",
+        "android_client_info": {
+          "package_name": "com.alekla0126.tapmap"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCf1gBR96e1qgKr1rvZIA7POxvGS2caVk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
