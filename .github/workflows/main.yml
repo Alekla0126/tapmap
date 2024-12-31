@@ -14,7 +14,7 @@ jobs:
       FLUTTER_CHANNEL: stable
       FLUTTER_VERSION: '3.27.1'
       APP_NAME: ${{ github.repository }}
-      BASE_HREF: "/client_tapmap/" # Updated to ensure it starts and ends with '/'
+      BASE_HREF: "/tapmap/" # Updated to ensure it starts and ends with '/'
 
     steps:
     - name: Checkout code
