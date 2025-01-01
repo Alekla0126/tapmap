@@ -1,0 +1,45 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Safari/605.1.15" version="26.0.1">
+  <diagram name="Auth Use Cases" id="0">
+    <mxGraphModel dx="3040" dy="3915" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-1" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-648" y="-1840" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-2" value="Browse Map Use Case" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="-518" y="-1760" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-3" value="Apply Filters Use" style="shape=ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="-518" y="-1900" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-4" value="MapBloc" style="shape=umlComponent;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="-298" y="-1750" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-5" value="FilterBloc" style="shape=umlComponent;whiteSpace=wrap;html=1;rounded=1;" vertex="1" parent="1">
+          <mxGeometry x="-298" y="-1890" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-6" style="rounded=0;orthogonalLoop=1;jettySize=auto;loopDirection=0;endArrow=open;strokeColor=#000000;" edge="1" parent="1" source="B3RoYQzHZVGX2YLkyXcV-1" target="B3RoYQzHZVGX2YLkyXcV-2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-633" y="-1810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-7" style="rounded=0;orthogonalLoop=1;jettySize=auto;loopDirection=0;endArrow=open;strokeColor=#000000;" edge="1" parent="1" source="B3RoYQzHZVGX2YLkyXcV-1" target="B3RoYQzHZVGX2YLkyXcV-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-633" y="-1810" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;loopDirection=0;endArrow=open;strokeColor=#000000;" edge="1" parent="1" source="B3RoYQzHZVGX2YLkyXcV-2" target="B3RoYQzHZVGX2YLkyXcV-4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-668" y="-1700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="B3RoYQzHZVGX2YLkyXcV-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;loopDirection=0;endArrow=open;strokeColor=#000000;" edge="1" parent="1" source="B3RoYQzHZVGX2YLkyXcV-3" target="B3RoYQzHZVGX2YLkyXcV-5">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-468" y="-1660" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

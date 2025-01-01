@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="26.0.2">
+  <diagram name="Auth Use Cases" id="j4PoPlTL41rEnhjDZyxq">
+    <mxGraphModel dx="646" dy="467" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Z8KyT9ZamP1omeRl6AZK-2" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="ELmv1lRLfs2C5lO6UADp-2" target="Z8KyT9ZamP1omeRl6AZK-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-2" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;" parent="1" vertex="1">
+          <mxGeometry x="40" y="180" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-3" value="Login" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="250" y="50" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-4" value="Signup" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="250" y="140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-5" value="Logout" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
+          <mxGeometry x="250" y="240" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-6" value="AuthBloc" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="500" y="165" width="130" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-7" style="entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ELmv1lRLfs2C5lO6UADp-2" target="ELmv1lRLfs2C5lO6UADp-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-8" style="entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ELmv1lRLfs2C5lO6UADp-2" target="ELmv1lRLfs2C5lO6UADp-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-9" style="entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="ELmv1lRLfs2C5lO6UADp-2" target="ELmv1lRLfs2C5lO6UADp-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-10" parent="1" source="ELmv1lRLfs2C5lO6UADp-3" target="ELmv1lRLfs2C5lO6UADp-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-11" parent="1" source="ELmv1lRLfs2C5lO6UADp-4" target="ELmv1lRLfs2C5lO6UADp-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ELmv1lRLfs2C5lO6UADp-12" style="entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="ELmv1lRLfs2C5lO6UADp-5" target="ELmv1lRLfs2C5lO6UADp-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Z8KyT9ZamP1omeRl6AZK-3" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Z8KyT9ZamP1omeRl6AZK-1" target="ELmv1lRLfs2C5lO6UADp-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Z8KyT9ZamP1omeRl6AZK-1" value="Forgot my password" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="250" y="320" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

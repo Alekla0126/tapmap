@@ -1,0 +1,79 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Safari/605.1.15" version="25.0.3">
+  <diagram name="Page-1" id="QhFoAhCEf31Zws0QHOex">
+    <mxGraphModel dx="1644" dy="547" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="actorUser" value="User" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="210" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="useCaseAuth" value="Auth Use Cases" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="-210" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="useCaseMapFilter" value="Map &amp; Filter Use Cases" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="-145" y="300" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="useCaseNotifications" value="Notifications Use Cases" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="180" y="210" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="useCaseSocial" value="Social &amp; Sharing Use Cases" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="90" y="300" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="useCaseRecomm" value="Recommendations &amp; Personalization" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="380" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="blocAuth" value="AuthBloc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-280" y="310" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="blocMap" value="MapBloc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-280" y="400" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="blocFilter" value="FilterBloc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-150" y="400" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="blocNotification" value="NotificationBloc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="310" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="blocSocial" value="SocialBloc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="190" y="400" width="80" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="blocRecomm" value="RecommendationBloc" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-5" y="470" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeUserAuth" edge="1" parent="1" source="actorUser" target="useCaseAuth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeUserMapFilter" edge="1" parent="1" source="actorUser" target="useCaseMapFilter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeUserNotifications" edge="1" parent="1" source="actorUser" target="useCaseNotifications">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeUserSocial" edge="1" parent="1" source="actorUser" target="useCaseSocial">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeUserRecomm" edge="1" parent="1" source="actorUser" target="useCaseRecomm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeAuthBloc" edge="1" parent="1" source="useCaseAuth" target="blocAuth">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeMapBloc" edge="1" parent="1" source="useCaseMapFilter" target="blocMap">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeFilterBloc" edge="1" parent="1" source="useCaseMapFilter" target="blocFilter">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeNotificationBloc" edge="1" parent="1" source="useCaseNotifications" target="blocNotification">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeSocialBloc" edge="1" parent="1" source="useCaseSocial" target="blocSocial">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edgeRecommBloc" edge="1" parent="1" source="useCaseRecomm" target="blocRecomm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
