@@ -25,12 +25,17 @@ class MyApp extends StatelessWidget {
         BlocProvider<MapBloc>(create: (context) => MapBloc()),
         BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Tap Map',
-        theme: ThemeData.light(),
-        darkTheme: ThemeData.dark(),
-        home: LoginScreen(),
+      child: BlocBuilder<MapBloc, MapState>(
+        builder: (context, state) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Tap Map',
+            theme: ThemeData.light(),
+            darkTheme: ThemeData.dark(),
+            themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            home: LoginScreen(),
+          );
+        },
       ),
     );
   }

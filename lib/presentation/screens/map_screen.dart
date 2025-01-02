@@ -110,7 +110,7 @@ class MapScreen extends StatelessWidget {
       children: [
         Positioned(
           bottom: 30.0,
-          left: 30.0,
+          right: 30.0,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,
             crossAxisAlignment: CrossAxisAlignment.start,
