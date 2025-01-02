@@ -5,21 +5,20 @@ import '../widgets/map_container.dart';
 import 'package:flutter/material.dart';
 
 class MapScreen extends StatelessWidget {
-  MapScreen({super.key});
+  final String authToken; // Auth token passed from the LoginScreen.
+
+  MapScreen({super.key, required this.authToken});
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<MapBloc>(
-      create: (context) => MapBloc(),
+      create:(context) => MapBloc(),
       child: Builder(
         builder: (context) {
           return Scaffold(
             key: _scaffoldKey,
-            appBar: AppBar(
-              title: const Text("Tap Map"),
-            ),
             drawer: _buildDrawer(context),
             body: Stack(
               children: [
@@ -30,18 +29,15 @@ class MapScreen extends StatelessWidget {
                             state.userLocation.longitude == 0)) {
                       return const Center(child: CircularProgressIndicator());
                     }
-
                     final mapboxUserLocation = mapbox.LatLng(
                       state.userLocation.latitude,
                       state.userLocation.longitude,
                     );
-
                     return MapContainer(
                       mapboxUrl: state.mapboxUrl,
                       userLocation: mapboxUserLocation,
                       points: state.points,
-                      isLoading:
-                          state.isLoading,
+                      isLoading: state.isLoading,
                     );
                   },
                 ),
@@ -98,7 +94,7 @@ class MapScreen extends StatelessWidget {
                           context
                               .read<MapBloc>()
                               .updateStyle(style['style_url']!);
-                          Navigator.pop(context); // Close the drawer
+                          Navigator.pop(context);
                         },
                       );
                     },
@@ -112,32 +108,35 @@ class MapScreen extends StatelessWidget {
   }
 
   Widget _buildFloatingActionButtons(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        FloatingActionButton(
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
-          backgroundColor: Colors.blue,
-          tooltip: 'Select Style',
-          child: const Icon(Icons.style),
-        ),
-        const SizedBox(height: 10),
-        FloatingActionButton(
-          onPressed: () {
-            context.read<MapBloc>().toggleTheme();
-          },
-          backgroundColor: Colors.grey,
-          tooltip: 'Toggle Theme',
-          child: BlocBuilder<MapBloc, MapState>(
-            builder: (context, state) {
-              return Icon(
-                  state.isDarkMode ? Icons.dark_mode : Icons.light_mode);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 40.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            onPressed: () {
+              _scaffoldKey.currentState?.openDrawer();
             },
+            backgroundColor: Colors.blue,
+            tooltip: 'Select Style',
+            child: const Icon(Icons.style, color: Colors.white),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            onPressed: () {
+              context.read<MapBloc>().toggleTheme();
+            },
+            backgroundColor: Colors.grey,
+            tooltip: 'Toggle Theme',
+            child: BlocBuilder<MapBloc, MapState>(
+              builder: (context, state) {
+                return Icon(
+                    state.isDarkMode ? Icons.dark_mode : Icons.light_mode);
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

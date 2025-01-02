@@ -19,7 +19,7 @@ class MapState extends Equatable {
 
   const MapState({
     required this.isDarkMode,
-    this.mapboxUrl = 'mapbox://styles/mapbox/light-v11',
+    this.mapboxUrl = 'mapbox://styles/v1/mapbox/light-v11',
     required this.userLocation,
     this.availableStyles = const [],
     this.points = const [],
@@ -62,13 +62,12 @@ class MapBloc extends Cubit<MapState> {
     _initializeRemoteConfig();
     _initializeUserLocation();
     fetchMapStyles();
-    fetchPoints();
+    // fetchPoints();
   }
 
   Future<void> fetchPoints() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
       // Check if points are already saved
       final savedPoints = prefs.getString('points');
       if (savedPoints != null) {
@@ -79,33 +78,28 @@ class MapBloc extends Cubit<MapState> {
         }).toList();
 
         emit(state.copyWith(points: points));
-        debugPrint("Loaded points from SharedPreferences: $points");
+        //debugPrint("Loaded points from SharedPreferences: $points");
         return;
       }
-
       // Fetch points from API
       const String apiUrl = 'https://api.tap-map.net/api/feature/collection/';
       final response = await http.get(Uri.parse(apiUrl));
-
       if (response.statusCode == 200) {
         final decodedResponse = utf8.decode(response.bodyBytes);
         final jsonResponse = json.decode(decodedResponse);
-
         final List<dynamic> features = jsonResponse['features'] ?? [];
         final points = features.map((feature) {
           return Map<String, dynamic>.from(feature);
         }).toList();
-
         // Save points in SharedPreferences
         prefs.setString('points', json.encode(points));
-
-        debugPrint("Points fetched and saved: $points");
+        // debugPrint("Points fetched and saved: $points");
         emit(state.copyWith(points: points));
       } else {
-        debugPrint('Failed to fetch points: ${response.body}');
+        //debugPrint('Failed to fetch points: ${response.body}');
       }
     } catch (e) {
-      debugPrint('Error fetching points: $e');
+      //debugPrint('Error fetching points: $e');
     }
   }
 
@@ -120,21 +114,14 @@ class MapBloc extends Cubit<MapState> {
 
       await remoteConfig.fetchAndActivate();
       final accessToken = remoteConfig.getString('mapbox_access_token');
-      debugPrint("Access token: $accessToken");
+      //debugPrint("Access token: $accessToken");
 
       if (state.mapboxUrl.isEmpty) {
-        emit(state.copyWith(mapboxUrl: _generateMapboxUrl(false, accessToken)));
+        emit(state.copyWith(mapboxUrl: 'mapbox://styles/v1/mapbox/light-v11'));
       }
     } catch (e) {
-      debugPrint("Error fetching remote config: $e");
+      //debugPrint("Error fetching remote config: $e");
     }
-  }
-
-  String _generateMapboxUrl(bool isDarkMode, String accessToken) {
-    if (isDarkMode) {
-      return "mapbox://styles/mapbox/dark-v11";
-    }
-    return "mapbox://styles/mapbox/light-v11";
   }
 
   Future<void> _initializeUserLocation() async {
@@ -149,7 +136,7 @@ class MapBloc extends Cubit<MapState> {
         ),
       );
     } catch (e) {
-      debugPrint("Error fetching user location: $e");
+      //debugPrint("Error fetching user location: $e");
     }
   }
 
@@ -162,7 +149,7 @@ class MapBloc extends Cubit<MapState> {
         final decodedResponse = utf8.decode(response.bodyBytes);
         final styles = json.decode(decodedResponse) as List;
 
-        debugPrint("Styles fetched: $styles");
+        //debugPrint("Styles fetched: $styles");
         final availableStyles = styles.map((style) {
           return {
             'id': style['id'].toString(),
@@ -175,49 +162,47 @@ class MapBloc extends Cubit<MapState> {
           emit(state.copyWith(availableStyles: availableStyles));
         }
       } else {
-        debugPrint('Failed to fetch styles: ${response.body}');
+        //debugPrint('Failed to fetch styles: ${response.body}');
       }
     } catch (e) {
-      debugPrint('Error fetching styles: $e');
+      //debugPrint('Error fetching styles: $e');
     }
   }
 
   void updateStyle(String styleUrl) {
     try {
-      debugPrint('Received style URL: $styleUrl');
+      //debugPrint('Received style URL: $styleUrl');
       // Emit loading state
       emit(state.copyWith(isLoading: true));
       // Update the Mapbox URL
       emit(state.copyWith(mapboxUrl: styleUrl));
-      debugPrint('Updated Mapbox URL: $styleUrl');
+      //debugPrint('Updated Mapbox URL: $styleUrl');
     } catch (e) {
-      debugPrint('Error updating style: $e');
+      //debugPrint('Error updating style: $e');
     }
-  }
-
+  } 
+  
   void toggleTheme() {
     final newMode = !state.isDarkMode;
     final newStyle = newMode
-        ? "mapbox://styles/mapbox/dark-v11"
-        : "mapbox://styles/mapbox/light-v11";
+        ? "mapbox://styles/v1/mapbox/dark-v11"
+        : "mapbox://styles/v1/mapbox/light-v11";
     // Emit loading state
     emit(state.copyWith(isLoading: true));
-    // Simulate rendering delay (for demonstration; remove in production)
-    Future.delayed(const Duration(milliseconds: 500), () {
-      emit(
-        state.copyWith(
-          isDarkMode: newMode,
-          mapboxUrl: newStyle,
-          isLoading: false, // Reset loading state
-        ),
-      );
-    });
-    debugPrint("Toggling theme. New mode: $newMode, New style: $newStyle");
+    // Update the state immediately without delay
+    emit(
+      state.copyWith(
+        isDarkMode: newMode,
+        mapboxUrl: newStyle,
+        isLoading: false,
+      ),
+    );
+    //debugPrint("Toggling theme. New mode: $newMode, New style: $newStyle");
   }
 
   Future<void> clearSavedPoints() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('points');
-    debugPrint("Saved points cleared.");
+    //debugPrint("Saved points cleared.");
   }
 }
