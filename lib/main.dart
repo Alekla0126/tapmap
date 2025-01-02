@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
       create: (context) => MapBloc(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'TapMap',
+        title: 'Tap Map',
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark(),
         home: MapScreen(),

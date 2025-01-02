@@ -1,4 +1,5 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
@@ -14,13 +15,15 @@ class MapState extends Equatable {
   final LatLng userLocation;
   final List<Map<String, String>> availableStyles;
   final List<Map<String, dynamic>> points;
+  final bool isLoading; // New property
 
   const MapState({
     required this.isDarkMode,
-    this.mapboxUrl = 'mapbox://styles/map23travel/cm16hxoxf01xr01pb1qfqgx5a',
+    this.mapboxUrl = 'mapbox://styles/mapbox/light-v11',
     required this.userLocation,
     this.availableStyles = const [],
     this.points = const [],
+    this.isLoading = false, // Default to false
   });
 
   MapState copyWith({
@@ -29,6 +32,7 @@ class MapState extends Equatable {
     LatLng? userLocation,
     List<Map<String, String>>? availableStyles,
     List<Map<String, dynamic>>? points,
+    bool? isLoading,
   }) {
     return MapState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -36,12 +40,13 @@ class MapState extends Equatable {
       userLocation: userLocation ?? this.userLocation,
       availableStyles: availableStyles ?? this.availableStyles,
       points: points ?? this.points,
+      isLoading: isLoading ?? this.isLoading,
     );
   }
 
   @override
   List<Object?> get props =>
-      [isDarkMode, mapboxUrl, userLocation, availableStyles, points];
+      [isDarkMode, mapboxUrl, userLocation, availableStyles, points, isLoading];
 }
 
 // MapBloc class
@@ -61,23 +66,40 @@ class MapBloc extends Cubit<MapState> {
   }
 
   Future<void> fetchPoints() async {
-    const String apiUrl = 'https://api.tap-map.net/api/feature/collection/';
     try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Check if points are already saved
+      final savedPoints = prefs.getString('points');
+      if (savedPoints != null) {
+        // Decode saved points
+        final decodedPoints = json.decode(savedPoints) as List<dynamic>;
+        final points = decodedPoints.map((point) {
+          return Map<String, dynamic>.from(point as Map);
+        }).toList();
+
+        emit(state.copyWith(points: points));
+        debugPrint("Loaded points from SharedPreferences: $points");
+        return;
+      }
+
+      // Fetch points from API
+      const String apiUrl = 'https://api.tap-map.net/api/feature/collection/';
       final response = await http.get(Uri.parse(apiUrl));
+
       if (response.statusCode == 200) {
-        // Decode response body with proper handling
         final decodedResponse = utf8.decode(response.bodyBytes);
         final jsonResponse = json.decode(decodedResponse);
 
-        // Ensure we are extracting a list from the JSON response
         final List<dynamic> features = jsonResponse['features'] ?? [];
-
-        // Convert the list of features to a list of maps
         final points = features.map((feature) {
           return Map<String, dynamic>.from(feature);
         }).toList();
 
-        debugPrint("Points fetched: $points");
+        // Save points in SharedPreferences
+        prefs.setString('points', json.encode(points));
+
+        debugPrint("Points fetched and saved: $points");
         emit(state.copyWith(points: points));
       } else {
         debugPrint('Failed to fetch points: ${response.body}');
@@ -90,8 +112,9 @@ class MapBloc extends Cubit<MapState> {
   Future<void> _initializeRemoteConfig() async {
     try {
       final remoteConfig = FirebaseRemoteConfig.instance;
+
       await remoteConfig.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(seconds: 10),
+        fetchTimeout: const Duration(days: 1),
         minimumFetchInterval: const Duration(seconds: 30),
       ));
 
@@ -105,6 +128,13 @@ class MapBloc extends Cubit<MapState> {
     } catch (e) {
       debugPrint("Error fetching remote config: $e");
     }
+  }
+
+  String _generateMapboxUrl(bool isDarkMode, String accessToken) {
+    if (isDarkMode) {
+      return "mapbox://styles/mapbox/dark-v11";
+    }
+    return "mapbox://styles/mapbox/light-v11";
   }
 
   Future<void> _initializeUserLocation() async {
@@ -121,11 +151,6 @@ class MapBloc extends Cubit<MapState> {
     } catch (e) {
       debugPrint("Error fetching user location: $e");
     }
-  }
-
-  String _generateMapboxUrl(bool isDarkMode, String accessToken) {
-    final id = isDarkMode ? "mapbox/dark-v10" : "mapbox/light-v10";
-    return "https://api.mapbox.com/styles/v1/$id/tiles/{z}/{x}/{y}?access_token=$accessToken";
   }
 
   Future<void> fetchMapStyles() async {
@@ -160,7 +185,9 @@ class MapBloc extends Cubit<MapState> {
   void updateStyle(String styleUrl) {
     try {
       debugPrint('Received style URL: $styleUrl');
-      // Update the Mapbox URL directly with the style_url
+      // Emit loading state
+      emit(state.copyWith(isLoading: true));
+      // Update the Mapbox URL
       emit(state.copyWith(mapboxUrl: styleUrl));
       debugPrint('Updated Mapbox URL: $styleUrl');
     } catch (e) {
@@ -170,14 +197,27 @@ class MapBloc extends Cubit<MapState> {
 
   void toggleTheme() {
     final newMode = !state.isDarkMode;
-    final mapboxUrl =
-        _generateMapboxUrl(newMode, state.mapboxUrl.split('=').last);
+    final newStyle = newMode
+        ? "mapbox://styles/mapbox/dark-v11"
+        : "mapbox://styles/mapbox/light-v11";
+    // Emit loading state
+    emit(state.copyWith(isLoading: true));
+    // Simulate rendering delay (for demonstration; remove in production)
+    Future.delayed(const Duration(milliseconds: 500), () {
+      emit(
+        state.copyWith(
+          isDarkMode: newMode,
+          mapboxUrl: newStyle,
+          isLoading: false, // Reset loading state
+        ),
+      );
+    });
+    debugPrint("Toggling theme. New mode: $newMode, New style: $newStyle");
+  }
 
-    emit(
-      state.copyWith(
-        isDarkMode: newMode,
-        mapboxUrl: mapboxUrl,
-      ),
-    );
+  Future<void> clearSavedPoints() async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('points');
+    debugPrint("Saved points cleared.");
   }
 }

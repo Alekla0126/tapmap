@@ -21,25 +21,44 @@ class MapScreen extends StatelessWidget {
               title: const Text("Tap Map"),
             ),
             drawer: _buildDrawer(context),
-            body: BlocBuilder<MapBloc, MapState>(
-              builder: (context, state) {
-                if (state.mapboxUrl.isEmpty ||
-                    (state.userLocation.latitude == 0 &&
-                        state.userLocation.longitude == 0)) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            body: Stack(
+              children: [
+                BlocBuilder<MapBloc, MapState>(
+                  builder: (context, state) {
+                    if (state.mapboxUrl.isEmpty ||
+                        (state.userLocation.latitude == 0 &&
+                            state.userLocation.longitude == 0)) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                final mapboxUserLocation = mapbox.LatLng(
-                  state.userLocation.latitude,
-                  state.userLocation.longitude,
-                );
+                    final mapboxUserLocation = mapbox.LatLng(
+                      state.userLocation.latitude,
+                      state.userLocation.longitude,
+                    );
 
-                return MapContainer(
-                  mapboxUrl: state.mapboxUrl,
-                  userLocation: mapboxUserLocation,
-                  points: state.points,
-                );
-              },
+                    return MapContainer(
+                      mapboxUrl: state.mapboxUrl,
+                      userLocation: mapboxUserLocation,
+                      points: state.points,
+                      isLoading:
+                          state.isLoading,
+                    );
+                  },
+                ),
+                BlocBuilder<MapBloc, MapState>(
+                  builder: (context, state) {
+                    if (state.isLoading) {
+                      return Container(
+                        color: Colors.black54,
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ],
             ),
             floatingActionButton: _buildFloatingActionButtons(context),
           );
@@ -79,8 +98,7 @@ class MapScreen extends StatelessWidget {
                           context
                               .read<MapBloc>()
                               .updateStyle(style['style_url']!);
-                          Navigator.pop(context);
-                          debugPrint("Selected Style: ${style['name']}");
+                          Navigator.pop(context); // Close the drawer
                         },
                       );
                     },
@@ -104,6 +122,20 @@ class MapScreen extends StatelessWidget {
           backgroundColor: Colors.blue,
           tooltip: 'Select Style',
           child: const Icon(Icons.style),
+        ),
+        const SizedBox(height: 10),
+        FloatingActionButton(
+          onPressed: () {
+            context.read<MapBloc>().toggleTheme();
+          },
+          backgroundColor: Colors.grey,
+          tooltip: 'Toggle Theme',
+          child: BlocBuilder<MapBloc, MapState>(
+            builder: (context, state) {
+              return Icon(
+                  state.isDarkMode ? Icons.dark_mode : Icons.light_mode);
+            },
+          ),
         ),
       ],
     );

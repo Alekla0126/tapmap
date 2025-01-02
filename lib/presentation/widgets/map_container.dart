@@ -1,16 +1,21 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:flutter/material.dart';
+
+import '../../domain/blocs/map_bloc.dart';
 
 class MapContainer extends StatefulWidget {
   final String mapboxUrl;
   final LatLng userLocation;
   final List<Map<String, dynamic>> points;
+  final bool isLoading;
 
   const MapContainer({
     required this.mapboxUrl,
     required this.userLocation,
     required this.points,
+    required this.isLoading,
     Key? key,
   }) : super(key: key);
 
@@ -58,27 +63,37 @@ class _MapContainerState extends State<MapContainer> {
 
   @override
   Widget build(BuildContext context) {
-    if (_accessToken == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return MapboxMap(
-      key: UniqueKey(),
-      accessToken: _accessToken!,
-      styleString: widget.mapboxUrl,
-      initialCameraPosition: CameraPosition(
-        target: widget.userLocation,
-        zoom: 15,
-      ),
-      onMapCreated: (controller) {
-        _controller = controller;
-        _addMarkers();
-        debugPrint("Map created with style: ${widget.mapboxUrl}");
-      },
-      onStyleLoadedCallback: () {
-        _addMarkers();
-        debugPrint("Map style loaded successfully.");
-      },
+    return Stack(
+      children: [
+        MapboxMap(
+          key: UniqueKey(),
+          accessToken: _accessToken!,
+          styleString: widget.mapboxUrl,
+          initialCameraPosition: CameraPosition(
+            target: widget.userLocation,
+            zoom: 15,
+          ),
+          onMapCreated: (controller) {
+            _controller = controller;
+            _addMarkers();
+          },
+          onStyleLoadedCallback: () {
+            _addMarkers();
+            debugPrint("Style applied: ${widget.mapboxUrl}");
+            // Notify the bloc to stop loading
+            context.read<MapBloc>().emit(
+                  context.read<MapBloc>().state.copyWith(isLoading: false),
+                );
+          },
+        ),
+        if (widget.isLoading)
+          Container(
+            color: Colors.black54,
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+      ],
     );
   }
 

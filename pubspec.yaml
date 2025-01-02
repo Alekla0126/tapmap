@@ -46,6 +46,7 @@ dependencies:
   mapbox_gl:
     git:
       url: https://github.com/flutter-mapbox-gl/maps.git   
+  shared_preferences: ^2.3.4
 
 dependency_overrides:
   mapbox_gl_platform_interface:
