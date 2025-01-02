@@ -17,7 +17,7 @@ class LoginScreen extends StatelessWidget {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => MapScreen(authToken: state.authToken),
+                builder: (context) => MapScreen(),
               ),
             );
           } else if (state is AuthFailure) {

@@ -5,16 +5,14 @@ import '../widgets/map_container.dart';
 import 'package:flutter/material.dart';
 
 class MapScreen extends StatelessWidget {
-  final String authToken; // Auth token passed from the LoginScreen.
-
-  MapScreen({super.key, required this.authToken});
+  MapScreen({super.key});
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<MapBloc>(
-      create:(context) => MapBloc(),
+      create: (context) => MapBloc(),
       child: Builder(
         builder: (context) {
           return Scaffold(
@@ -108,35 +106,41 @@ class MapScreen extends StatelessWidget {
   }
 
   Widget _buildFloatingActionButtons(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 40.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            onPressed: () {
-              _scaffoldKey.currentState?.openDrawer();
-            },
-            backgroundColor: Colors.blue,
-            tooltip: 'Select Style',
-            child: const Icon(Icons.style, color: Colors.white),
+    return Stack(
+      children: [
+        Positioned(
+          bottom: 30.0,
+          left: 30.0,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FloatingActionButton(
+                onPressed: () {
+                  _scaffoldKey.currentState?.openDrawer();
+                },
+                backgroundColor: Colors.blue,
+                tooltip: 'Select Style',
+                child: const Icon(Icons.style, color: Colors.white),
+              ),
+              const SizedBox(height: 10),
+              FloatingActionButton(
+                onPressed: () {
+                  context.read<MapBloc>().toggleTheme();
+                },
+                backgroundColor: Colors.grey,
+                tooltip: 'Toggle Theme',
+                child: BlocBuilder<MapBloc, MapState>(
+                  builder: (context, state) {
+                    return Icon(
+                        state.isDarkMode ? Icons.dark_mode : Icons.light_mode);
+                  },
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            onPressed: () {
-              context.read<MapBloc>().toggleTheme();
-            },
-            backgroundColor: Colors.grey,
-            tooltip: 'Toggle Theme',
-            child: BlocBuilder<MapBloc, MapState>(
-              builder: (context, state) {
-                return Icon(
-                    state.isDarkMode ? Icons.dark_mode : Icons.light_mode);
-              },
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

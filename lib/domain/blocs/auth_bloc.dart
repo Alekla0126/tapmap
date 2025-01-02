@@ -1,3 +1,4 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
@@ -51,6 +52,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<LoginEvent>(_onLogin);
   }
 
+  // Method to save the token in secure storage.
+  void _saveToken(String token) async {
+    final storage = FlutterSecureStorage();
+    await storage.write
+    (key: "auth_token", value: token);
+  }
+
+  // Method to login the user.
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
 
@@ -66,9 +75,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         headers: {"Content-Type": "application/json"},
         body: body,
       );
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
+        // Save the token in secure flutter storage.
+        _saveToken(data["auth_token"]);
         emit(AuthSuccess(authToken: data["auth_token"]));
       } else {
         emit(AuthFailure(error: "Invalid email or password."));
