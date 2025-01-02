@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         title: 'Tap Map',
         theme: ThemeData.light(),
         darkTheme: ThemeData.dark(),
-        home: MapScreen(),
+        home: LoginScreen(),
       ),
     );
   }
