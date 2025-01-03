@@ -51,55 +51,84 @@ class MapState extends Equatable {
 
 // MapBloc class
 class MapBloc extends Cubit<MapState> {
+  int _currentStyleIndex = 0;
+
   MapBloc()
       : super(
           const MapState(
             isDarkMode: false,
-            mapboxUrl: '',
+            mapboxUrl: 'mapbox://styles/map23travel/cm16hxoxf01xr01pb1qfqgx5a',
             userLocation: LatLng(0, 0),
           ),
         ) {
     _initializeRemoteConfig();
     _initializeUserLocation();
     fetchMapStyles();
-    // fetchPoints();
+    _initializePoints();
+  }
+
+  // Points are being initialize
+  Future<void> _initializePoints() async {
+    emit(state.copyWith(isLoading: true)); // Indicate loading
+    // await fetchPoints(); // Fetch the points
+    emit(state.copyWith(isLoading: false)); // Stop loading
+  }
+
+  // Getter for current style index
+  int get currentStyleIndex => _currentStyleIndex;
+
+  // Setter to update the current style index
+  void setStyleIndex(int index) {
+    _currentStyleIndex = index;
   }
 
   Future<void> fetchPoints() async {
+    const String apiUrl = 'https://api.tap-map.net/api/feature/collection/';
     try {
       final prefs = await SharedPreferences.getInstance();
-      // Check if points are already saved
-      final savedPoints = prefs.getString('points');
-      if (savedPoints != null) {
-        // Decode saved points
-        final decodedPoints = json.decode(savedPoints) as List<dynamic>;
-        final points = decodedPoints.map((point) {
-          return Map<String, dynamic>.from(point as Map);
-        }).toList();
+
+      // Check if cached points exist and are not expired
+      final cachedData = prefs.getString('cached_points');
+      final cachedTimestamp = prefs.getInt('cached_timestamp');
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+
+      if (cachedData != null &&
+          cachedTimestamp != null &&
+          currentTime - cachedTimestamp < 3600000) {
+        // Use cached data if within 1 hour
+        debugPrint('Using cached points.');
+        final jsonResponse = json.decode(cachedData);
+        final List<dynamic> features = jsonResponse['features'] ?? [];
+        final points = features
+            .map((feature) => Map<String, dynamic>.from(feature))
+            .toList();
 
         emit(state.copyWith(points: points));
-        //debugPrint("Loaded points from SharedPreferences: $points");
         return;
       }
-      // Fetch points from API
-      const String apiUrl = 'https://api.tap-map.net/api/feature/collection/';
+
+      // Fetch new data from API
       final response = await http.get(Uri.parse(apiUrl));
       if (response.statusCode == 200) {
         final decodedResponse = utf8.decode(response.bodyBytes);
         final jsonResponse = json.decode(decodedResponse);
         final List<dynamic> features = jsonResponse['features'] ?? [];
-        final points = features.map((feature) {
-          return Map<String, dynamic>.from(feature);
-        }).toList();
-        // Save points in SharedPreferences
-        prefs.setString('points', json.encode(points));
-        // debugPrint("Points fetched and saved: $points");
+        final points = features
+            .map((feature) => Map<String, dynamic>.from(feature))
+            .toList();
+
         emit(state.copyWith(points: points));
+
+        // Cache the new data and timestamp
+        await prefs.setString('cached_points', decodedResponse);
+        await prefs.setInt('cached_timestamp', currentTime);
+
+        debugPrint('Fetched and cached new points.');
       } else {
-        //debugPrint('Failed to fetch points: ${response.body}');
+        debugPrint('Failed to fetch points. Status: ${response.statusCode}');
       }
     } catch (e) {
-      //debugPrint('Error fetching points: $e');
+      debugPrint('Error fetching points: $e');
     }
   }
 
@@ -117,7 +146,7 @@ class MapBloc extends Cubit<MapState> {
       //debugPrint("Access token: $accessToken");
 
       if (state.mapboxUrl.isEmpty) {
-        emit(state.copyWith(mapboxUrl: 'mapbox://styles/v1/mapbox/light-v11'));
+        emit(state.copyWith(mapboxUrl: 'mapbox://styles/map23travel/cm16hxoxf01xr01pb1qfqgx5a'));
       }
     } catch (e) {
       //debugPrint("Error fetching remote config: $e");
@@ -180,8 +209,8 @@ class MapBloc extends Cubit<MapState> {
     } catch (e) {
       //debugPrint('Error updating style: $e');
     }
-  } 
-  
+  }
+
   void toggleTheme() {
     final newMode = !state.isDarkMode;
     final newStyle = newMode

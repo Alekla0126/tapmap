@@ -2,6 +2,7 @@ import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/blocs/map_bloc.dart';
 import '../widgets/map_container.dart';
+import '../widgets/search_bar_and_button.dart';
 import 'package:flutter/material.dart';
 
 class MapScreen extends StatelessWidget {
@@ -17,9 +18,9 @@ class MapScreen extends StatelessWidget {
         builder: (context) {
           return Scaffold(
             key: _scaffoldKey,
-            drawer: _buildDrawer(context),
             body: Stack(
               children: [
+                // Main map rendering
                 BlocBuilder<MapBloc, MapState>(
                   builder: (context, state) {
                     if (state.mapboxUrl.isEmpty ||
@@ -39,6 +40,7 @@ class MapScreen extends StatelessWidget {
                     );
                   },
                 ),
+                // Loading overlay
                 BlocBuilder<MapBloc, MapState>(
                   builder: (context, state) {
                     if (state.isLoading) {
@@ -52,95 +54,18 @@ class MapScreen extends StatelessWidget {
                     return const SizedBox.shrink();
                   },
                 ),
+                // Add SearchWithButton widget at the top
+                Positioned(
+                  top: 30.0,
+                  left: 20.0,
+                  right: 20.0,
+                  child: SearchWithButton(),
+                ),
               ],
             ),
-            floatingActionButton: _buildFloatingActionButtons(context),
           );
         },
       ),
-    );
-  }
-
-  Widget _buildDrawer(BuildContext context) {
-    return BlocBuilder<MapBloc, MapState>(
-      builder: (context, state) {
-        final styles = state.availableStyles;
-        return Drawer(
-          child: Column(
-            children: [
-              const DrawerHeader(
-                child: Text(
-                  "Choose a Style",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-              if (styles.isEmpty)
-                const Expanded(
-                  child: Center(
-                    child: Text("No styles available"),
-                  ),
-                )
-              else
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: styles.length,
-                    itemBuilder: (context, index) {
-                      final style = styles[index];
-                      return ListTile(
-                        title: Text(style['name']!),
-                        onTap: () {
-                          context
-                              .read<MapBloc>()
-                              .updateStyle(style['style_url']!);
-                          Navigator.pop(context);
-                        },
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildFloatingActionButtons(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned(
-          bottom: 30.0,
-          right: 30.0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              FloatingActionButton(
-                onPressed: () {
-                  _scaffoldKey.currentState?.openDrawer();
-                },
-                backgroundColor: Colors.blue,
-                tooltip: 'Select Style',
-                child: const Icon(Icons.style, color: Colors.white),
-              ),
-              const SizedBox(height: 10),
-              FloatingActionButton(
-                onPressed: () {
-                  context.read<MapBloc>().toggleTheme();
-                },
-                backgroundColor: Colors.grey,
-                tooltip: 'Toggle Theme',
-                child: BlocBuilder<MapBloc, MapState>(
-                  builder: (context, state) {
-                    return Icon(
-                        state.isDarkMode ? Icons.dark_mode : Icons.light_mode);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

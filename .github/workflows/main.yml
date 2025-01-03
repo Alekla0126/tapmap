@@ -14,7 +14,7 @@ jobs:
       FLUTTER_CHANNEL: stable
       FLUTTER_VERSION: '3.27.1'
       APP_NAME: ${{ github.repository }}
-      BASE_HREF: "/tapmap/" # Updated to ensure it starts and ends with '/'
+      BASE_HREF: "/tapmap/"
 
     steps:
     - name: Checkout code
@@ -32,31 +32,14 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
+    - name: Modify index.html to include Mapbox GL JS
+      run: |
+        sed -i '/<\/head>/i \
+        <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>\n\
+        <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet" />' web/index.html
+
     - name: Build the web app
       run: flutter build web --base-href="${{ env.BASE_HREF }}"
-
-    - name: Create CORS Proxy Page
-      run: |
-        echo '<!DOCTYPE html>
-        <html>
-        <head>
-            <title>CORS Proxy</title>
-        </head>
-        <body>
-            <script>
-                const corsAnywhere = "https://cors-anywhere.herokuapp.com/";
-                const targetUrl = "https://alekla0126.github.io/tapmap/"; // Your actual URL
-                
-                async function fetchWithCors(url) {
-                    const response = await fetch(corsAnywhere + url);
-                    const data = await response.text(); // Use text() if expecting HTML
-                    console.log(data);
-                }
-                
-                fetchWithCors(targetUrl);
-            </script>
-        </body>
-        </html>' > build/web/cors-proxy.html
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
