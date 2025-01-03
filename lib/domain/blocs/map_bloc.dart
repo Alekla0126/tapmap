@@ -64,7 +64,7 @@ class MapBloc extends Cubit<MapState> {
     _initializeRemoteConfig();
     _initializeUserLocation();
     fetchMapStyles();
-    _initializePoints();
+    // _initializePoints();
   }
 
   // Points are being initialize
