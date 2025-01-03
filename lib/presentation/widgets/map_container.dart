@@ -83,8 +83,7 @@ class _MapContainerState extends State<MapContainer> {
               accessToken: _accessToken ?? '',
               styleString: widget.mapboxUrl,
               initialCameraPosition: CameraPosition(
-                // target: widget.userLocation,
-                target: LatLng(7.8804, 98.3923),
+                target: widget.userLocation,
                 zoom: 12,
               ),
               onMapCreated: (controller) async {
