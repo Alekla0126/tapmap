@@ -66,13 +66,13 @@ class _MapContainerState extends State<MapContainer> {
   Widget build(BuildContext context) {
     return BlocListener<MapBloc, MapState>(
       listener: (context, state) {
-        // if (_controller != null && state.points.isNotEmpty) {
-        //   final newPoints = state.points.where((point) {
-        //     final id = point['properties']['id']?.toString();
-        //     return id != null && !_addedMarkerIds.contains(id);
-        //   }).toList();
-        //   _addMarkers(newPoints);
-        // }
+        if (_controller != null && state.points.isNotEmpty) {
+          final newPoints = state.points.where((point) {
+            final id = point['properties']['id']?.toString();
+            return id != null && !_addedMarkerIds.contains(id);
+          }).toList();
+          _addMarkers(newPoints);
+        }
       },
       child: Stack(
         children: [
@@ -93,7 +93,7 @@ class _MapContainerState extends State<MapContainer> {
               },
               onStyleLoadedCallback: () async {
                 await Future.delayed(Duration(milliseconds: 100));
-                // await _addMarkers(widget.points);
+                await _addMarkers(widget.points);
                 context.read<MapBloc>().emit(
                       context.read<MapBloc>().state.copyWith(isLoading: false),
                     );
