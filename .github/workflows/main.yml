@@ -32,6 +32,19 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
+    - name: Generate splash screen
+      run: flutter pub run flutter_native_splash:create
+
+    - name: Add web icons
+      run: |
+        sed -i '/<\/head>/i \
+        <link rel="apple-touch-icon" sizes="180x180" href="assets/web/apple-touch-icon.png">\n\
+        <link rel="icon" type="image/png" sizes="192x192" href="assets/web/icon-192.png">\n\
+        <link rel="icon" type="image/png" sizes="512x512" href="assets/web/icon-512.png">\n\
+        <link rel="icon" type="image/png" sizes="192x192" href="assets/web/icon-192-maskable.png" mask="true">\n\
+        <link rel="icon" type="image/png" sizes="512x512" href="assets/web/icon-512-maskable.png" mask="true">\n\
+        <link rel="icon" type="image/x-icon" href="assets/web/favicon.ico">' web/index.html
+
     - name: Modify index.html to include Mapbox GL JS
       run: |
         sed -i '/<\/head>/i \
