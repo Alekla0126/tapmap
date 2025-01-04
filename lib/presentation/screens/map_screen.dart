@@ -58,7 +58,7 @@ class MapScreen extends StatelessWidget {
                 Positioned(
                   top: 20.0,
                   left: 20.0,
-                  right: 40.0,
+                  right: 50.0,
                   child: SearchWithButton(),
                 ),
               ],

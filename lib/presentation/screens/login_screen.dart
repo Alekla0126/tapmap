@@ -144,7 +144,7 @@ class LoginScreen extends StatelessWidget {
 
   Widget _buildRoundedButton(BuildContext context,
       {required String text, required VoidCallback onPressed}) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(

@@ -18,7 +18,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
     return Row(
       children: [
         Flexible(
-          flex: 2, // Makes the dropdown occupy 2/6 of the row's width
+          flex: 2, // Makes the dropdown occupy 1/6 of the row's width
           child: Container(
             height: 40, // Fixed height for the dropdown
             decoration: BoxDecoration(
@@ -89,7 +89,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
         ),
         const SizedBox(width: 8), // Spacing between dropdown and search bar
         Flexible(
-          flex: 4, // Makes the search bar occupy 4/6 of the row's width
+          flex: 5, // Makes the search bar occupy 5/6 of the row's width
           child: _buildSearchBar(),
         ),
       ],
