@@ -34,18 +34,41 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                     isDense: true,
                     isExpanded: true,
                     value: _currentStyleName,
-                    hint: const Text(
-                      'Select Theme',
-                      style: TextStyle(fontSize: 12, color: Colors.white),
+                    hint: FittedBox(
+                      fit: BoxFit
+                          .scaleDown, // Ensures text scales down to fit the dropdown
+                      child: const Text(
+                        'Select Theme',
+                        style: TextStyle(color: Colors.white), // Default style
+                      ),
                     ),
+                    selectedItemBuilder: (context) {
+                      return styles.map((style) {
+                        return FittedBox(
+                          fit: BoxFit
+                              .scaleDown, // Scale text to fit the dropdown
+                          child: Text(
+                            style['name']!,
+                            style: const TextStyle(
+                              color:
+                                  Colors.white, // Matches the dropdown's color
+                            ),
+                          ),
+                        );
+                      }).toList();
+                    },
                     items: styles
                         .map((style) => DropdownMenuItem<String>(
                               value: style['name'],
-                              child: Text(
-                                style['name']!,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white, // White text
+                              child: FittedBox(
+                                fit: BoxFit
+                                    .scaleDown, // Scales the text inside dropdown items
+                                child: Text(
+                                  style['name']!,
+                                  style: const TextStyle(
+                                    color:
+                                        Colors.white, // Matches dropdown theme
+                                  ),
                                 ),
                               ),
                             ))
@@ -53,10 +76,12 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                     onChanged: (value) {
                       final selectedStyle = styles.firstWhere(
                         (style) => style['name'] == value,
-                        orElse: () => <String, String>{}, // Provide a default empty map
+                        orElse: () => <String, String>{}, // Default empty map
                       );
                       if (selectedStyle.isNotEmpty) {
-                        context.read<MapBloc>().updateStyle(selectedStyle['style_url']!);
+                        context
+                            .read<MapBloc>()
+                            .updateStyle(selectedStyle['style_url']!);
                         setState(() {
                           _currentStyleName = value;
                         });
@@ -113,9 +138,11 @@ class _SearchWithButtonState extends State<SearchWithButton> {
       child: TextField(
         decoration: InputDecoration(
           hintText: "Search location...",
-          prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 16), // Search icon
+          prefixIcon: const Icon(Icons.search,
+              color: Colors.grey, size: 16), // Search icon
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         ),
         onSubmitted: (value) {
           debugPrint("Search query: $value");

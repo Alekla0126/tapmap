@@ -1,8 +1,8 @@
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../widgets/search_bar_and_button.dart';
 import '../../../domain/blocs/map_bloc.dart';
 import '../widgets/map_container.dart';
-import '../widgets/search_bar_and_button.dart';
 import 'package:flutter/material.dart';
 
 class MapScreen extends StatelessWidget {
@@ -35,7 +35,6 @@ class MapScreen extends StatelessWidget {
                     return MapContainer(
                       mapboxUrl: state.mapboxUrl,
                       userLocation: mapboxUserLocation,
-                      points: state.points,
                       isLoading: state.isLoading,
                     );
                   },

@@ -32,27 +32,23 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Generate splash screen
-      run: flutter pub run flutter_native_splash:create
-
-    - name: Add web icons
-      run: |
-        sed -i '/<\/head>/i \
-        <link rel="apple-touch-icon" sizes="180x180" href="assets/web/apple-touch-icon.png">\n\
-        <link rel="icon" type="image/png" sizes="192x192" href="assets/web/icon-192.png">\n\
-        <link rel="icon" type="image/png" sizes="512x512" href="assets/web/icon-512.png">\n\
-        <link rel="icon" type="image/png" sizes="192x192" href="assets/web/icon-192-maskable.png" mask="true">\n\
-        <link rel="icon" type="image/png" sizes="512x512" href="assets/web/icon-512-maskable.png" mask="true">\n\
-        <link rel="icon" type="image/x-icon" href="assets/web/favicon.ico">' web/index.html
-
-    - name: Modify index.html to include Mapbox GL JS
-      run: |
-        sed -i '/<\/head>/i \
-        <script src="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.js"></script>\n\
-        <link href="https://api.mapbox.com/mapbox-gl-js/v2.7.0/mapbox-gl.css" rel="stylesheet" />' web/index.html
-
     - name: Build the web app
       run: flutter build web --base-href="${{ env.BASE_HREF }}"
+
+    - name: Modify built index.html to include Mapbox GL JS
+      run: |
+        sed -i '/<\/head>/i \
+        <script src="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.js"></script>\n\
+        <link href="https://api.mapbox.com/mapbox-gl-js/v2.8.2/mapbox-gl.css" rel="stylesheet" />' build/web/index.html
+
+    - name: Add custom Mapbox GL styles to built app
+      run: |
+        sed -i '/<\/style>/i \
+        .mapboxgl-map {\n\
+          position: relative;\n\
+          width: 100%;\n\
+          height: 100%;\n\
+        }\n' build/web/index.html
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3

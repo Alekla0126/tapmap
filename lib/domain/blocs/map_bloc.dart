@@ -234,4 +234,5 @@ class MapBloc extends Cubit<MapState> {
     prefs.remove('points');
     //debugPrint("Saved points cleared.");
   }
+
 }

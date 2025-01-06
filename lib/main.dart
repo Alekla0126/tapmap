@@ -3,8 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'presentation/screens/login_screen.dart';
 import 'package:flutter/material.dart';
-import 'domain/blocs/map_bloc.dart';
 import 'domain/blocs/auth_bloc.dart';
+import 'domain/blocs/map_bloc.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -29,11 +29,11 @@ class MyApp extends StatelessWidget {
         builder: (context, state) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Tap Map',
+            title: 'TapMap',
             theme: ThemeData.light(),
             darkTheme: ThemeData.dark(),
             themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: LoginScreen(),
+            home: MapScreen(),
           );
         },
       ),
