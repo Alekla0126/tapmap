@@ -4,7 +4,7 @@ import '../../domain/blocs/map_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
+import 'dart:math' as math;
 import 'dart:async';
 import 'dart:math';
 
@@ -27,6 +27,11 @@ class MapContainer extends StatefulWidget {
 class _MapContainerState extends State<MapContainer> {
   MapboxMapController? _controller;
   String? _accessToken;
+
+  // Track last center and threshold for fetching
+  LatLng? _lastCenter;
+  final double _fetchThreshold = 500; // meters
+
   final Set<String> _addedMarkerIds = {};
 
   @override
@@ -38,7 +43,6 @@ class _MapContainerState extends State<MapContainer> {
   Future<void> _initializeRemoteConfig() async {
     try {
       final remoteConfig = FirebaseRemoteConfig.instance;
-
       await remoteConfig.setConfigSettings(RemoteConfigSettings(
         fetchTimeout: const Duration(seconds: 10),
         minimumFetchInterval: const Duration(days: 1),
@@ -69,19 +73,15 @@ class _MapContainerState extends State<MapContainer> {
       height: MediaQuery.of(context).size.height,
       width: MediaQuery.of(context).size.width,
       child: _accessToken == null || _accessToken!.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : MapboxMap(
               key: UniqueKey(),
               accessToken: _accessToken!,
               styleString: widget.mapboxUrl,
               initialCameraPosition: const CameraPosition(
-                /// If you want to use the user location, uncomment:
-                /// target: widget.userLocation,
-                /// For debugging with Phuket:
+                // For debugging, set a location in Phuket:
                 target: LatLng(7.8804, 98.3923),
-                zoom: 14,
+                zoom: 15,
               ),
               onMapCreated: (controller) async {
                 _controller = controller;
@@ -90,32 +90,70 @@ class _MapContainerState extends State<MapContainer> {
               },
               onStyleLoadedCallback: () async {
                 debugPrint("Style loaded. Adding vector tiles and markers...");
+                await _addMarkerImage(_controller!);
                 await _addVectorTileSource();
-                await _addMarkersFromVectorTiles(
-                  const LatLng(7.8804, 98.3923), // Using Phuket debug location
-                );
+                await _addMarkersFromVectorTiles(const LatLng(7.8804, 98.3923));
                 if (context.mounted) {
-                  // Stop loading indicator with Bloc
-                  context.read<MapBloc>().emit(
-                        context
-                            .read<MapBloc>()
-                            .state
-                            .copyWith(isLoading: false),
-                      );
+                  context
+                      .read<MapBloc>()
+                      .emit(context.read<MapBloc>().state.copyWith(
+                            isLoading: false,
+                          ));
                 }
               },
+              onCameraIdle: _handleCameraIdle, // Listen for camera idle
             ),
     );
   }
 
+  // Called when the camera stops moving
+  void _handleCameraIdle() async {
+    if (_controller == null) return;
+
+    // Get the new center
+    final camPos = await _controller!.cameraPosition;
+    final newCenter = camPos?.target;
+
+    if (_lastCenter == null) {
+      _lastCenter = newCenter;
+      return;
+    }
+
+    // Calculate distance from last center
+    final distanceMoved = _calculateDistanceInMeters(_lastCenter!, newCenter!);
+    debugPrint("Map moved $distanceMoved meters from old center.");
+
+    // If threshold exceeded, re-fetch
+    if (distanceMoved > _fetchThreshold) {
+      debugPrint("Moved more than $_fetchThreshold meters => re-fetch data");
+      _lastCenter = newCenter;
+      await _addMarkersFromVectorTiles(newCenter);
+    }
+  }
+
+  double _calculateDistanceInMeters(LatLng start, LatLng end) {
+    const double earthRadius = 6371000; // in meters
+    final lat1 = _degreesToRadians(start.latitude);
+    final lat2 = _degreesToRadians(end.latitude);
+    final dLat = _degreesToRadians(end.latitude - start.latitude);
+    final dLng = _degreesToRadians(end.longitude - start.longitude);
+
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double deg) => deg * math.pi / 180;
+
   /// Load the marker image into the style
   Future<void> _addMarkerImage(MapboxMapController controller) async {
     try {
-      // Load the image bytes from assets
       final byteData = await rootBundle.load("assets/marker.png");
       final Uint8List imageBytes = byteData.buffer.asUint8List();
-
-      // Add the image to the Mapbox style under an ID, e.g. "custom-marker"
       await controller.addImage("custom-marker", imageBytes);
       debugPrint("Marker image added successfully.");
     } catch (e) {
