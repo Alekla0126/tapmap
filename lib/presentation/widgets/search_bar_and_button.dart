@@ -1,5 +1,6 @@
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 import '../../domain/blocs/map_bloc.dart';
 import 'package:flutter/material.dart';
 
@@ -35,8 +36,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                     isExpanded: true,
                     value: _currentStyleName,
                     hint: FittedBox(
-                      fit: BoxFit
-                          .scaleDown, // Ensures text scales down to fit the dropdown
+                      fit: BoxFit.scaleDown,
                       child: const Text(
                         'Select Theme',
                         style: TextStyle(color: Colors.white), // Default style
@@ -45,8 +45,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                     selectedItemBuilder: (context) {
                       return styles.map((style) {
                         return FittedBox(
-                          fit: BoxFit
-                              .scaleDown, // Scale text to fit the dropdown
+                          fit: BoxFit.scaleDown,
                           child: Text(
                             style['name']!,
                             style: const TextStyle(
@@ -61,8 +60,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                         .map((style) => DropdownMenuItem<String>(
                               value: style['name'],
                               child: FittedBox(
-                                fit: BoxFit
-                                    .scaleDown, // Scales the text inside dropdown items
+                                fit: BoxFit.scaleDown,
                                 child: Text(
                                   style['name']!,
                                   style: const TextStyle(
@@ -73,18 +71,39 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                               ),
                             ))
                         .toList(),
-                    onChanged: (value) {
+                    onChanged: (value) async {
                       final selectedStyle = styles.firstWhere(
                         (style) => style['name'] == value,
                         orElse: () => <String, String>{}, // Default empty map
                       );
+
                       if (selectedStyle.isNotEmpty) {
-                        context
-                            .read<MapBloc>()
-                            .updateStyle(selectedStyle['style_url']!);
+                        final styleUrl = selectedStyle['style_url']!;
+                        final mapBloc = context.read<MapBloc>();
+
+                        // Save the current camera position
+                        final controller = mapBloc.mapController;
+                        final currentCameraPosition =
+                            await controller?.cameraPosition;
+
+                        // Trigger the theme change
+                        mapBloc.updateStyle(styleUrl);
+
                         setState(() {
                           _currentStyleName = value;
                         });
+
+                        // Restore the camera position after the style update
+                        if (currentCameraPosition != null) {
+                          await Future.delayed(const Duration(
+                              milliseconds: 500)); // Wait for style to apply
+                          controller?.animateCamera(
+                            CameraUpdate.newLatLngZoom(
+                              currentCameraPosition.target,
+                              currentCameraPosition.zoom,
+                            ),
+                          );
+                        }
                       }
                     },
                     buttonStyleData: const ButtonStyleData(

@@ -1,9 +1,9 @@
-import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
-import 'package:latlong2/latlong.dart';
 import 'package:flutter/material.dart';
 import 'package:bloc/bloc.dart';
 import 'dart:convert';
@@ -52,6 +52,7 @@ class MapState extends Equatable {
 // MapBloc class
 class MapBloc extends Cubit<MapState> {
   int _currentStyleIndex = 0;
+  MapboxMapController? mapController;
 
   MapBloc()
       : super(
@@ -146,7 +147,9 @@ class MapBloc extends Cubit<MapState> {
       //debugPrint("Access token: $accessToken");
 
       if (state.mapboxUrl.isEmpty) {
-        emit(state.copyWith(mapboxUrl: 'mapbox://styles/map23travel/cm16hxoxf01xr01pb1qfqgx5a'));
+        emit(state.copyWith(
+            mapboxUrl:
+                'mapbox://styles/map23travel/cm16hxoxf01xr01pb1qfqgx5a'));
       }
     } catch (e) {
       //debugPrint("Error fetching remote config: $e");
@@ -198,17 +201,13 @@ class MapBloc extends Cubit<MapState> {
     }
   }
 
-  void updateStyle(String styleUrl) {
-    try {
-      //debugPrint('Received style URL: $styleUrl');
-      // Emit loading state
-      emit(state.copyWith(isLoading: true));
-      // Update the Mapbox URL
-      emit(state.copyWith(mapboxUrl: styleUrl));
-      //debugPrint('Updated Mapbox URL: $styleUrl');
-    } catch (e) {
-      //debugPrint('Error updating style: $e');
-    }
+  void updateStyle(String newStyleUrl) {
+    emit(state.copyWith(mapboxUrl: newStyleUrl, isLoading: true));
+
+    // Reset `isLoading` after a delay to allow style change
+    Future.delayed(const Duration(seconds: 1), () {
+      emit(state.copyWith(isLoading: false));
+    });
   }
 
   void toggleTheme() {
@@ -234,5 +233,4 @@ class MapBloc extends Cubit<MapState> {
     prefs.remove('points');
     //debugPrint("Saved points cleared.");
   }
-
 }

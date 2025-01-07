@@ -30,8 +30,7 @@ class _MapContainerState extends State<MapContainer> {
 
   // Track last center and threshold for fetching
   LatLng? _lastCenter;
-  final double _fetchThreshold = 500; // meters
-  final Set<String> _addedMarkerIds = {};
+  final double _fetchThreshold = 500;
 
   @override
   void initState() {
@@ -77,13 +76,15 @@ class _MapContainerState extends State<MapContainer> {
               key: UniqueKey(),
               accessToken: _accessToken!,
               styleString: widget.mapboxUrl,
-              initialCameraPosition: const CameraPosition(
+              initialCameraPosition: CameraPosition(
+                // target: widget.userLocation,
                 // For debugging, set a location in Phuket:
-                target: LatLng(7.8804, 98.3923),
+                target: const LatLng(7.8804, 98.3923),
                 zoom: 15,
               ),
               onMapCreated: (controller) async {
                 _controller = controller;
+                context.read<MapBloc>().mapController = controller;
                 debugPrint("Map created and controller assigned.");
                 await _addMarkerImage(_controller!);
               },
@@ -146,7 +147,7 @@ class _MapContainerState extends State<MapContainer> {
   }
 
   double _degreesToRadians(double deg) => deg * math.pi / 180;
- 
+
   Future<void> _addMarkerImage(MapboxMapController controller) async {
     try {
       final byteData = await rootBundle.load("assets/marker.png");
@@ -194,258 +195,26 @@ class _MapContainerState extends State<MapContainer> {
         null, // No filter
       );
 
-      debugPrint("Features: $features");
-      debugPrint("Features fetched: ${features.length}");
+      debugPrint("Features fetched: ${features}");
 
-      // Render each feature
+      // Process each feature
       for (var feature in features) {
         if (feature is Map) {
-          // Extract geometry map
           final geometryMap = feature['geometry'] as Map<String, dynamic>?;
           if (geometryMap == null) {
             debugPrint("Feature has no geometry. Skipping...");
             continue;
           }
 
-          // Extract geometry type and coordinates
           final geometryType = geometryMap['type'] as String?;
           final coords = geometryMap['coordinates'];
 
-          // Validate and handle Point geometry
-          if (geometryType == 'Point' && coords is List && coords.length == 2) {
-            final lng = coords[0] is num ? coords[0] as double : null;
-            final lat = coords[1] is num ? coords[1] as double : null;
-
-            if (lng == null || lat == null) {
-              debugPrint("Invalid Point coordinates. Skipping...");
-              continue;
-            }
-
-            final properties = feature['properties'] as Map<String, dynamic>?;
-            final id = properties?['id']?.toString() ?? '';
-            final name = properties?['name']?.toString() ?? 'Unnamed';
-
-            debugPrint("Adding marker at LatLng($lat, $lng) with ID: $id");
-
-            await _controller!.addSymbol(
-              SymbolOptions(
-                geometry: LatLng(lat, lng),
-                iconImage: "custom-marker",
-                iconSize: 0.5,
-                // textField: name,
-                textOffset: const Offset(0, 1),
-                textColor: "#000000",
-              ),
-            );
-
-            // Handle LineString geometry
-          } else if (geometryType == 'LineString' && coords is List) {
-            if (coords.isNotEmpty &&
-                coords.first is List &&
-                coords.last is List) {
-              final start = coords.first as List;
-              final end = coords.last as List;
-
-              if (start.length >= 2 && end.length >= 2) {
-                final startLat = start[1] is num ? start[1] as double : null;
-                final startLng = start[0] is num ? start[0] as double : null;
-                final endLat = end[1] is num ? end[1] as double : null;
-                final endLng = end[0] is num ? end[0] as double : null;
-
-                if (startLat == null ||
-                    startLng == null ||
-                    endLat == null ||
-                    endLng == null) {
-                  debugPrint("Invalid LineString coordinates. Skipping...");
-                  continue;
-                }
-
-                final midLat = (startLat + endLat) / 2;
-                final midLng = (startLng + endLng) / 2;
-
-                final properties =
-                    feature['properties'] as Map<String, dynamic>?;
-                final name = properties?['name']?.toString() ?? 'Unnamed Line';
-
-                debugPrint(
-                    "Adding LineString midpoint marker at LatLng($midLat, $midLng)");
-
-                await _controller!.addSymbol(
-                  SymbolOptions(
-                    geometry: LatLng(midLat, midLng),
-                    iconImage: "custom-marker",
-                    iconSize: 0.5,
-                    // textField: name,
-                    textOffset: const Offset(0, 1),
-                    textColor: "#000000",
-                  ),
-                );
-              } else {
-                debugPrint("Invalid LineString start or end coordinates.");
-              }
-            } else {
-              debugPrint("Invalid LineString coordinates structure.");
-            }
-
-            // Handle MultiLineString and Polygon geometries
-          } else if (geometryType == 'MultiLineString' ||
-              geometryType == 'Polygon') {
-            debugPrint("Processing $geometryType geometry...");
-
-            if (geometryType == 'Polygon' && coords is List) {
-              // Handle Polygon by calculating the centroid
-              final List<List<double>> polygonCoords = [];
-              for (var pair in coords.first) {
-                if (pair is List &&
-                    pair.length == 2 &&
-                    pair[0] is num &&
-                    pair[1] is num) {
-                  polygonCoords.add([pair[0] as double, pair[1] as double]);
-                } else {
-                  debugPrint("Invalid coordinate pair in Polygon: $pair");
-                }
-              }
-
-              if (polygonCoords.isNotEmpty) {
-                double centroidLat = 0;
-                double centroidLng = 0;
-                for (var pair in polygonCoords) {
-                  centroidLng += pair[0];
-                  centroidLat += pair[1];
-                }
-                centroidLat /= polygonCoords.length;
-                centroidLng /= polygonCoords.length;
-
-                debugPrint(
-                    "Adding marker for Polygon at LatLng($centroidLat, $centroidLng)");
-
-                await _controller!.addSymbol(
-                  SymbolOptions(
-                    geometry: LatLng(centroidLat, centroidLng),
-                    iconImage: "custom-marker",
-                    iconSize: 0.5,
-                    // textField: name,
-                    textOffset: const Offset(0, 1),
-                    textColor: "#000000",
-                  ),
-                );
-              } else {
-                debugPrint("Invalid Polygon coordinates. Skipping...");
-              }
-            } else if (geometryType == 'MultiLineString' && coords is List) {
-              // Handle MultiLineString by differentiating cases
-              bool needsFlattening = coords.length > 1;
-
-              if (needsFlattening) {
-                debugPrint("Flattening MultiLineString...");
-
-                // Flatten the MultiLineString
-                final List<List<double>> flattenedCoords = [];
-                for (var segment in coords) {
-                  if (segment is List) {
-                    for (var pair in segment) {
-                      if (pair is List &&
-                          pair.length == 2 &&
-                          pair[0] is num &&
-                          pair[1] is num) {
-                        flattenedCoords
-                            .add([pair[0] as double, pair[1] as double]);
-                      } else {
-                        debugPrint(
-                            "Invalid coordinate pair in MultiLineString: $pair");
-                      }
-                    }
-                  } else {
-                    debugPrint("Invalid segment in MultiLineString: $segment");
-                  }
-                }
-
-                if (flattenedCoords.isNotEmpty) {
-                  double totalLat = 0;
-                  double totalLng = 0;
-                  for (var pair in flattenedCoords) {
-                    totalLng += pair[0];
-                    totalLat += pair[1];
-                  }
-                  final centerLat = totalLat / flattenedCoords.length;
-                  final centerLng = totalLng / flattenedCoords.length;
-
-                  debugPrint(
-                      "Adding marker for flattened MultiLineString at LatLng($centerLat, $centerLng)");
-
-                  await _controller!.addSymbol(
-                    SymbolOptions(
-                      geometry: LatLng(centerLat, centerLng),
-                      iconImage: "custom-marker",
-                      iconSize: 0.5,
-                      // textField: name, // Display label
-                      textOffset: const Offset(0, 1),
-                      textColor: "#000000",
-                    ),
-                  );
-                } else {
-                  debugPrint(
-                      "No valid coordinates found in MultiLineString. Skipping...");
-                }
-              } else {
-                debugPrint(
-                    "Calculating midpoint for simple MultiLineString...");
-
-                // Treat as a single line, find the midpoint
-                final firstSegment = coords.first;
-                final lastSegment = coords.last;
-
-                if (firstSegment is List &&
-                    firstSegment.first is List &&
-                    lastSegment.last is List) {
-                  final start = firstSegment.first as List;
-                  final end = lastSegment.last as List;
-
-                  if (start.length >= 2 && end.length >= 2) {
-                    final startLat =
-                        start[1] is num ? start[1] as double : null;
-                    final startLng =
-                        start[0] is num ? start[0] as double : null;
-                    final endLat = end[1] is num ? end[1] as double : null;
-                    final endLng = end[0] is num ? end[0] as double : null;
-
-                    if (startLat == null ||
-                        startLng == null ||
-                        endLat == null ||
-                        endLng == null) {
-                      debugPrint(
-                          "Invalid MultiLineString coordinates. Skipping...");
-                    } else {
-                      final midLat = (startLat + endLat) / 2;
-                      final midLng = (startLng + endLng) / 2;
-
-                      debugPrint(
-                          "Adding MultiLineString midpoint marker at LatLng($midLat, $midLng)");
-
-                      await _controller!.addSymbol(
-                        SymbolOptions(
-                          geometry: LatLng(midLat, midLng),
-                          iconImage: "custom-marker",
-                          iconSize: 0.5,
-                          // textField: name, // Display label
-                          textOffset: const Offset(0, 1),
-                          textColor: "#000000",
-                        ),
-                      );
-                    }
-                  } else {
-                    debugPrint(
-                        "Invalid MultiLineString start or end coordinates.");
-                  }
-                } else {
-                  debugPrint("Invalid MultiLineString coordinates structure.");
-                }
-              }
-            }
-          } else {
-            debugPrint(
-                "Skipping unsupported or invalid geometry type: $geometryType");
+          if (geometryType == null || coords == null) {
+            debugPrint("Invalid geometry type or coordinates. Skipping...");
+            continue;
           }
+
+          await _processGeometry(geometryType, coords, feature, geometryMap);
         } else {
           debugPrint("Unexpected feature format. Skipping...");
         }
@@ -454,6 +223,249 @@ class _MapContainerState extends State<MapContainer> {
       debugPrint("All markers added successfully.");
     } catch (e) {
       debugPrint("Error adding markers from vector tiles: $e");
+    }
+  }
+
+  Future<void> _processGeometry(
+    String geometryType,
+    dynamic coords,
+    Map feature,
+    Map<String, dynamic> geometryMap,
+  ) async {
+    switch (geometryType) {
+      case 'Point':
+        await _handlePointGeometry(coords, feature);
+        break;
+
+      case 'MultiPoint':
+        await _handleMultiPointGeometry(coords, feature);
+        break;
+
+      case 'LineString':
+        await _handleLineStringGeometry(coords, feature);
+        break;
+
+      case 'MultiLineString':
+        await _handleMultiLineStringGeometry(coords, feature);
+        break;
+
+      case 'Polygon':
+        await _handlePolygonGeometry(coords, feature);
+        break;
+
+      case 'MultiPolygon':
+        await _handleMultiPolygonGeometry(coords, feature);
+        break;
+
+      case 'GeometryCollection':
+        // Pass the same geometryMap here
+        await _handleGeometryCollectionGeometry(geometryMap, feature);
+        break;
+
+      default:
+        debugPrint("Unsupported geometry type: $geometryType. Skipping...");
+    }
+  }
+
+  Future<void> _handleMultiPointGeometry(dynamic coords, Map feature) async {
+    if (coords is List) {
+      for (var point in coords) {
+        await _handlePointGeometry(point, feature);
+      }
+    } else {
+      debugPrint("Invalid MultiPoint coordinates structure. Skipping...");
+    }
+  }
+
+  Future<void> _handleMultiPolygonGeometry(dynamic coords, Map feature) async {
+    if (coords is List) {
+      for (var polygon in coords) {
+        await _handlePolygonGeometry(polygon, feature);
+      }
+    } else {
+      debugPrint("Invalid MultiPolygon structure. Skipping...");
+    }
+  }
+
+  Future<void> _handleGeometryCollectionGeometry(
+      Map<String, dynamic> geometryMap, Map feature) async {
+    final geometries = geometryMap['geometries'];
+    if (geometries is List) {
+      for (var geom in geometries) {
+        if (geom is Map) {
+          final subGeometryType = geom['type'];
+          final subCoords = geom['coordinates'];
+          await _processGeometry(subGeometryType, subCoords, feature,
+              geom as Map<String, dynamic>);
+        }
+      }
+    }
+  }
+
+  Future<void> _handlePointGeometry(dynamic coords, Map feature) async {
+    if (coords is List && coords.length == 2) {
+      final lng = coords[0] is num ? coords[0] as double : null;
+      final lat = coords[1] is num ? coords[1] as double : null;
+
+      if (lng == null || lat == null) {
+        debugPrint("Invalid Point coordinates. Skipping...");
+        return;
+      }
+
+      final properties = feature['properties'] as Map<String, dynamic>?;
+      final id = properties?['id']?.toString() ?? '';
+      final name = properties?['name']?.toString() ?? 'Unnamed';
+
+      debugPrint("Adding marker at LatLng($lat, $lng) with ID: $id");
+
+      await _controller!.addSymbol(
+        SymbolOptions(
+          geometry: LatLng(lat, lng),
+          iconImage: "custom-marker",
+          iconSize: 0.5,
+          textOffset: const Offset(0, 1),
+          textColor: "#000000",
+        ),
+      );
+    } else {
+      debugPrint("Invalid Point coordinates structure. Skipping...");
+    }
+  }
+
+  Future<void> _handleLineStringGeometry(dynamic coords, Map feature) async {
+    if (coords is List && coords.isNotEmpty) {
+      // Convert each [lng, lat] pair to LatLng
+      final lineLatLngs = <LatLng>[];
+      for (var coord in coords) {
+        if (coord is List && coord.length >= 2) {
+          final lng = coord[0];
+          final lat = coord[1];
+          if (lng is num && lat is num) {
+            lineLatLngs.add(LatLng(lat.toDouble(), lng.toDouble()));
+          }
+        }
+      }
+
+      if (lineLatLngs.length < 2) {
+        debugPrint("Invalid LineString coordinates. Need at least two points.");
+        return;
+      }
+
+      // Draw the line
+      await _controller?.addLine(
+        LineOptions(
+          geometry: lineLatLngs,
+          lineColor: "#3BB2D0", // Pick your color
+          lineWidth: 2.0, // Pick your width
+          lineOpacity: 1.0,
+        ),
+      );
+
+      // Optionally, place a marker at the midpoint
+      final start = lineLatLngs.first;
+      final end = lineLatLngs.last;
+      final midLat = (start.latitude + end.latitude) / 2;
+      final midLng = (start.longitude + end.longitude) / 2;
+
+      debugPrint(
+          "Adding LineString midpoint marker at LatLng($midLat, $midLng)");
+      await _controller?.addSymbol(
+        SymbolOptions(
+          geometry: LatLng(midLat, midLng),
+          iconImage: "custom-marker",
+          iconSize: 0.5,
+          textOffset: const Offset(0, 1),
+          textColor: "#000000",
+        ),
+      );
+    } else {
+      debugPrint("Invalid LineString coordinates structure. Skipping...");
+    }
+  }
+
+  Future<void> _handlePolygonGeometry(dynamic coords, Map feature) async {
+    if (coords is List) {
+      final List<List<double>> polygonCoords = [];
+      for (var pair in coords.first) {
+        if (pair is List &&
+            pair.length == 2 &&
+            pair[0] is num &&
+            pair[1] is num) {
+          polygonCoords.add([pair[0] as double, pair[1] as double]);
+        } else {
+          debugPrint("Invalid coordinate pair in Polygon: $pair");
+        }
+      }
+
+      if (polygonCoords.isNotEmpty) {
+        final centroidLat =
+            polygonCoords.map((pair) => pair[1]).reduce((a, b) => a + b) /
+                polygonCoords.length;
+        final centroidLng =
+            polygonCoords.map((pair) => pair[0]).reduce((a, b) => a + b) /
+                polygonCoords.length;
+
+        debugPrint(
+            "Adding marker for Polygon at LatLng($centroidLat, $centroidLng)");
+
+        await _controller!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(centroidLat, centroidLng),
+            iconImage: "custom-marker",
+            iconSize: 0.5,
+            textOffset: const Offset(0, 1),
+            textColor: "#000000",
+          ),
+        );
+      } else {
+        debugPrint("Invalid Polygon coordinates. Skipping...");
+      }
+    } else {
+      debugPrint("Invalid Polygon coordinates structure. Skipping...");
+    }
+  }
+
+  Future<void> _handleMultiLineStringGeometry(
+      dynamic coords, Map feature) async {
+    if (coords is List && coords.length > 1) {
+      final List<List<double>> flattenedCoords = coords.expand((segment) {
+        if (segment is List) {
+          return segment.whereType<List>().map((pair) {
+            if (pair.length == 2 && pair[0] is num && pair[1] is num) {
+              return [pair[0] as double, pair[1] as double];
+            }
+            return null;
+          }).whereType<List<double>>();
+        }
+        return <List<double>>[];
+      }).toList();
+
+      if (flattenedCoords.isNotEmpty) {
+        final centerLat =
+            flattenedCoords.map((pair) => pair[1]).reduce((a, b) => a + b) /
+                flattenedCoords.length;
+        final centerLng =
+            flattenedCoords.map((pair) => pair[0]).reduce((a, b) => a + b) /
+                flattenedCoords.length;
+
+        debugPrint(
+            "Adding marker for flattened MultiLineString at LatLng($centerLat, $centerLng)");
+
+        await _controller!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(centerLat, centerLng),
+            iconImage: "custom-marker",
+            iconSize: 0.5,
+            textOffset: const Offset(0, 1),
+            textColor: "#000000",
+          ),
+        );
+      } else {
+        debugPrint(
+            "No valid coordinates found in MultiLineString. Skipping...");
+      }
+    } else {
+      debugPrint("Invalid MultiLineString structure. Skipping...");
     }
   }
 
