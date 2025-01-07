@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 abstract class AuthEvent extends Equatable {
   @override
   List<Object?> get props => [];
@@ -47,16 +46,38 @@ class AuthFailure extends AuthState {
   List<Object?> get props => [error];
 }
 
+class CheckTokenEvent extends AuthEvent {}
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
+
   AuthBloc() : super(AuthInitial()) {
     on<LoginEvent>(_onLogin);
+    on<CheckTokenEvent>(_onCheckToken);
+  }
+
+  // Method to check if a token exists in storage. It is necessary to check the token
+  // or refresh it when the app is opened.
+  Future<void> _onCheckToken(
+      CheckTokenEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+
+    try {
+      final token = await _storage.read(key: "auth_token");
+      if (token != null) {
+        emit(AuthSuccess(authToken: token));
+      } else {
+        emit(AuthInitial());
+      }
+    } catch (e) {
+      emit(AuthFailure(error: "An error occurred. Please try again."));
+    }
   }
 
   // Method to save the token in secure storage.
   void _saveToken(String token) async {
-    final storage = FlutterSecureStorage();
-    await storage.write
-    (key: "auth_token", value: token);
+    final _storage = FlutterSecureStorage();
+    await _storage.write(key: "auth_token", value: token);
   }
 
   // Method to login the user.

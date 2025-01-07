@@ -10,6 +10,11 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Dispatch CheckTokenEvent when the screen is loaded.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthBloc>().add(CheckTokenEvent());
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Tap Map"),

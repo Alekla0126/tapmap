@@ -31,7 +31,6 @@ class _MapContainerState extends State<MapContainer> {
   // Track last center and threshold for fetching
   LatLng? _lastCenter;
   final double _fetchThreshold = 500; // meters
-
   final Set<String> _addedMarkerIds = {};
 
   @override
@@ -106,7 +105,6 @@ class _MapContainerState extends State<MapContainer> {
     );
   }
 
-  // Called when the camera stops moving
   void _handleCameraIdle() async {
     if (_controller == null) return;
 
@@ -148,8 +146,7 @@ class _MapContainerState extends State<MapContainer> {
   }
 
   double _degreesToRadians(double deg) => deg * math.pi / 180;
-
-  /// Load the marker image into the style
+ 
   Future<void> _addMarkerImage(MapboxMapController controller) async {
     try {
       final byteData = await rootBundle.load("assets/marker.png");
