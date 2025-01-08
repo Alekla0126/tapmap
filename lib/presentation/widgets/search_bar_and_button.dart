@@ -83,8 +83,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
 
                         // Save the current camera position
                         final controller = mapBloc.mapController;
-                        final currentCameraPosition =
-                            await controller?.cameraPosition;
+                        final currentCameraPosition = await controller?.cameraPosition;
 
                         // Print the current camera position
                         debugPrint("Current camera position: $currentCameraPosition");
@@ -98,9 +97,9 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                           await Future.delayed(
                               const Duration(milliseconds: 500));
                           debugPrint("Restoring camera position...");
-                          debugPrint("Latest center: $currentCameraPosition.target");
+                          debugPrint("Latest center: $currentCameraPosition");
                           mapBloc.mapController?.animateCamera(
-                            CameraUpdate.newLatLng(currentCameraPosition.target),
+                            CameraUpdate.newCameraPosition(currentCameraPosition),
                           );
                         }
                       }

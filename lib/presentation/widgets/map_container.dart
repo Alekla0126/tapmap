@@ -30,7 +30,7 @@ class _MapContainerState extends State<MapContainer> {
 
   // Track last center and threshold for fetching
   LatLng? _lastCenter;
-  final double _fetchThreshold = 500;
+  final double _fetchThreshold = 10;
 
   @override
   void initState() {
@@ -128,7 +128,7 @@ class _MapContainerState extends State<MapContainer> {
       _lastCenter = newCenter;
       await _addMarkersFromVectorTiles(newCenter);
     }
-  } 
+  }
 
   double _calculateDistanceInMeters(LatLng start, LatLng end) {
     const double earthRadius = 6371000; // in meters
@@ -171,7 +171,7 @@ class _MapContainerState extends State<MapContainer> {
           maxzoom: 18,
         ),
       );
-      debugPrint("Vector tile source added successfully.");
+      debugPrint("Vector tile source with clustering added successfully.");
     } catch (e) {
       debugPrint("Error adding vector tile source: $e");
     }
