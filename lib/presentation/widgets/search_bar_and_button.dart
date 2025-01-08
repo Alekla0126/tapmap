@@ -74,7 +74,7 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                     onChanged: (value) async {
                       final selectedStyle = styles.firstWhere(
                         (style) => style['name'] == value,
-                        orElse: () => <String, String>{}, // Default empty map
+                        orElse: () => <String, String>{},
                       );
 
                       if (selectedStyle.isNotEmpty) {
@@ -86,22 +86,21 @@ class _SearchWithButtonState extends State<SearchWithButton> {
                         final currentCameraPosition =
                             await controller?.cameraPosition;
 
+                        // Print the current camera position
+                        debugPrint("Current camera position: $currentCameraPosition");
+
                         // Trigger the theme change
+                        // Save style, etc.
                         mapBloc.updateStyle(styleUrl);
 
-                        setState(() {
-                          _currentStyleName = value;
-                        });
-
-                        // Restore the camera position after the style update
+                        // Then after the style is applied:
                         if (currentCameraPosition != null) {
-                          await Future.delayed(const Duration(
-                              milliseconds: 500)); // Wait for style to apply
-                          controller?.animateCamera(
-                            CameraUpdate.newLatLngZoom(
-                              currentCameraPosition.target,
-                              currentCameraPosition.zoom,
-                            ),
+                          await Future.delayed(
+                              const Duration(milliseconds: 500));
+                          debugPrint("Restoring camera position...");
+                          debugPrint("Latest center: $currentCameraPosition.target");
+                          mapBloc.mapController?.animateCamera(
+                            CameraUpdate.newLatLng(currentCameraPosition.target),
                           );
                         }
                       }

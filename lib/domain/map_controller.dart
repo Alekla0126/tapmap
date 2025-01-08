@@ -1,0 +1,259 @@
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:flutter/services.dart';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:math';
+
+class MapController {
+  MapboxMapController? controller;
+  String? accessToken;
+  LatLng?lastCenter;
+  final double fetchThreshold = 500;
+
+  Future<void> initializeRemoteConfig() async {
+    try {
+      final remoteConfig = FirebaseRemoteConfig.instance;
+      await remoteConfig.setConfigSettings(RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: const Duration(days: 1),
+      ));
+
+      await remoteConfig.fetchAndActivate();
+      final token = remoteConfig.getString('mapbox_access_token');
+
+      if (token.isNotEmpty) {
+        accessToken = token;
+      } else {
+        throw Exception("Mapbox access token is empty.");
+      }
+    } catch (e) {
+      throw Exception("Failed to load map configuration: $e");
+    }
+  }
+
+  Future<void> addMarkerImage() async {
+    if (controller == null) return;
+    try {
+      final byteData = await rootBundle.load("assets/marker.png");
+      final Uint8List imageBytes = byteData.buffer.asUint8List();
+      await controller!.addImage("custom-marker", imageBytes);
+    } catch (e) {
+      throw Exception("Error loading marker image: $e");
+    }
+  }
+
+  Future<void> addVectorTileSource() async {
+    if (controller == null) return;
+    try {
+      await controller!.addSource(
+        'places',
+        VectorSourceProperties(
+          tiles: ['https://map-travel.net/tilesets/data/tiles/{z}/{x}/{y}.pbf'],
+          minzoom: 0,
+          maxzoom: 18,
+        ),
+      );
+    } catch (e) {
+      throw Exception("Error adding vector tile source: $e");
+    }
+  }
+
+  Future<void> addMarkersFromVectorTiles(LatLng location) async {
+    if (controller == null) return;
+    try {
+      final screenPoint = await controller!.toScreenLocation(location);
+      final features = await controller!.queryRenderedFeatures(
+        Point<double>(
+          screenPoint.x.toDouble(),
+          screenPoint.y.toDouble(),
+        ),
+        [],
+        null,
+      );
+
+      for (var feature in features) {
+        if (feature is Map) {
+          final geometryMap = feature['geometry'] as Map<String, dynamic>?;
+          if (geometryMap == null) continue;
+          final geometryType = geometryMap['type'] as String?;
+          final coords = geometryMap['coordinates'];
+
+          if (geometryType == null || coords == null) continue;
+          await _processGeometry(geometryType, coords, feature, geometryMap);
+        }
+      }
+    } catch (e) {
+      throw Exception("Error adding markers from vector tiles: $e");
+    }
+  }
+
+  Future<void> _processGeometry(
+    String geometryType,
+    dynamic coords,
+    Map feature,
+    Map<String, dynamic> geometryMap,
+  ) async {
+    switch (geometryType) {
+      case 'Point':
+        await _handlePointGeometry(coords, feature);
+        break;
+      case 'MultiPoint':
+        await _handleMultiPointGeometry(coords, feature);
+        break;
+      case 'LineString':
+        await _handleLineStringGeometry(coords, feature);
+        break;
+      case 'MultiLineString':
+        await _handleMultiLineStringGeometry(coords, feature);
+        break;
+      case 'GeometryCollection':
+        await _handleGeometryCollectionGeometry(geometryMap, feature);
+        break;
+      default:
+        break;
+    }
+  }
+
+  Future<void> _handlePointGeometry(dynamic coords, Map feature) async {
+    if (coords is List && coords.length == 2) {
+      final lng = coords[0] is num ? coords[0] as double : null;
+      final lat = coords[1] is num ? coords[1] as double : null;
+
+      if (lng == null || lat == null) return;
+
+      await controller!.addSymbol(
+        SymbolOptions(
+          geometry: LatLng(lat, lng),
+          iconImage: "custom-marker",
+          iconSize: 0.5,
+          textOffset: const Offset(0, 1),
+          textColor: "#000000",
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleMultiPointGeometry(dynamic coords, Map feature) async {
+    if (coords is List) {
+      for (var point in coords) {
+        await _handlePointGeometry(point, feature);
+      }
+    }
+  }
+
+  Future<void> _handleLineStringGeometry(dynamic coords, Map feature) async {
+    if (coords is List && coords.isNotEmpty) {
+      final lineLatLngs = <LatLng>[];
+      for (var coord in coords) {
+        if (coord is List && coord.length >= 2) {
+          final lng = coord[0];
+          final lat = coord[1];
+          if (lng is num && lat is num) {
+            lineLatLngs.add(LatLng(lat.toDouble(), lng.toDouble()));
+          }
+        }
+      }
+
+      if (lineLatLngs.length < 2) return;
+
+      await controller?.addLine(
+        LineOptions(
+          geometry: lineLatLngs,
+          lineColor: "#3BB2D0",
+          lineWidth: 2.0,
+          lineOpacity: 1.0,
+        ),
+      );
+
+      final start = lineLatLngs.first;
+      final end = lineLatLngs.last;
+      final midLat = (start.latitude + end.latitude) / 2;
+      final midLng = (start.longitude + end.longitude) / 2;
+
+      await controller?.addSymbol(
+        SymbolOptions(
+          geometry: LatLng(midLat, midLng),
+          iconImage: "custom-marker",
+          iconSize: 0.5,
+          textOffset: const Offset(0, 1),
+          textColor: "#000000",
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleMultiLineStringGeometry(
+      dynamic coords, Map feature) async {
+    if (coords is List && coords.length > 1) {
+      final List<List<double>> flattenedCoords = coords.expand((segment) {
+        if (segment is List) {
+          return segment.whereType<List>().map((pair) {
+            if (pair.length == 2 && pair[0] is num && pair[1] is num) {
+              return [pair[0] as double, pair[1] as double];
+            }
+            return null;
+          }).whereType<List<double>>();
+        }
+        return <List<double>>[];
+      }).toList();
+
+      if (flattenedCoords.isNotEmpty) {
+        final centerLat =
+            flattenedCoords.map((pair) => pair[1]).reduce((a, b) => a + b) /
+                flattenedCoords.length;
+        final centerLng =
+            flattenedCoords.map((pair) => pair[0]).reduce((a, b) => a + b) /
+                flattenedCoords.length;
+
+        await controller!.addSymbol(
+          SymbolOptions(
+            geometry: LatLng(centerLat, centerLng),
+            iconImage: "custom-marker",
+            iconSize: 0.5,
+            textOffset: const Offset(0, 1),
+            textColor: "#000000",
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleGeometryCollectionGeometry(
+      Map<String, dynamic> geometryMap, Map feature) async {
+    final geometries = geometryMap['geometries'];
+    if (geometries is List) {
+      for (var geom in geometries) {
+        if (geom is Map) {
+          final subGeometryType = geom['type'];
+          final subCoords = geom['coordinates'];
+          await _processGeometry(subGeometryType, subCoords, feature,
+              geom as Map<String, dynamic>);
+        }
+      }
+    }
+  }
+
+  double calculateDistanceInMeters(LatLng start, LatLng end) {
+    const double earthRadius = 6371000;
+    final lat1 = _degreesToRadians(start.latitude);
+    final lat2 = _degreesToRadians(end.latitude);
+    final dLat = _degreesToRadians(end.latitude - start.latitude);
+    final dLng = _degreesToRadians(end.longitude - start.longitude);
+
+    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLng / 2) *
+            math.sin(dLng / 2);
+    final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
+    return earthRadius * c;
+  }
+
+  double _degreesToRadians(double deg) => deg * math.pi / 180;
+
+  void setController(MapboxMapController controller) {
+    controller = controller;
+  }
+
+}

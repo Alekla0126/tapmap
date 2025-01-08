@@ -128,7 +128,7 @@ class _MapContainerState extends State<MapContainer> {
       _lastCenter = newCenter;
       await _addMarkersFromVectorTiles(newCenter);
     }
-  }
+  } 
 
   double _calculateDistanceInMeters(LatLng start, LatLng end) {
     const double earthRadius = 6371000; // in meters
@@ -250,11 +250,11 @@ class _MapContainerState extends State<MapContainer> {
         break;
 
       case 'Polygon':
-        await _handlePolygonGeometry(coords, feature);
+        // await _handlePolygonGeometry(coords, feature);
         break;
 
       case 'MultiPolygon':
-        await _handleMultiPolygonGeometry(coords, feature);
+        //await _handleMultiPolygonGeometry(coords, feature);
         break;
 
       case 'GeometryCollection':

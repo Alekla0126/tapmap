@@ -1,3 +1,4 @@
+import '../../domain/repositories/map_repository.dart';
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../widgets/search_bar_and_button.dart';
@@ -13,7 +14,7 @@ class MapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<MapBloc>(
-      create: (context) => MapBloc(),
+      create: (context) => MapBloc(MapRepository()),
       child: Builder(
         builder: (context) {
           return Scaffold(
