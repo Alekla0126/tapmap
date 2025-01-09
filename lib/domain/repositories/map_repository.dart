@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'dart:convert';
 
+import 'package:tap_map_app/data/constants/api_constants.dart';
+
 class MapRepository {
   /// Fetches the Mapbox Access Token from Firebase Remote Config
   Future<String?> fetchRemoteConfigAccessToken() async {
@@ -32,7 +34,7 @@ class MapRepository {
 
   /// Fetches available map styles from an API
   Future<List<Map<String, String>>> fetchMapStyles() async {
-    const String apiUrl = 'https://api.tap-map.net/api/styles/';
+    const String apiUrl = ApiConstants.styles;
     final response = await http.get(Uri.parse(apiUrl));
     if (response.statusCode == 200) {
       final decodedResponse = utf8.decode(response.bodyBytes);
@@ -52,7 +54,7 @@ class MapRepository {
 
   /// Fetches points from an API or uses cached data if available
   Future<List<Map<String, dynamic>>> fetchPoints() async {
-    const String apiUrl = 'https://api.tap-map.net/api/feature/collection/';
+    const String apiUrl = ApiConstants.featureCollection ;
     final prefs = await SharedPreferences.getInstance();
 
     // Check cache

@@ -2,6 +2,8 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/blocs/map_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
@@ -73,6 +75,11 @@ class _MapContainerState extends State<MapContainer> {
       child: _accessToken == null || _accessToken!.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : MapboxMap(
+              gestureRecognizers: {
+                Factory<OneSequenceGestureRecognizer>(
+                  () => EagerGestureRecognizer(),
+                ),
+              },
               key: UniqueKey(),
               accessToken: _accessToken!,
               styleString: widget.mapboxUrl,

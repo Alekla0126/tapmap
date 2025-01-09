@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../data/constants/api_constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:http/http.dart' as http;
@@ -84,7 +85,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
 
-    final url = Uri.parse("https://api.tap-map.net/api/auth/token/login/");
+    final url = Uri.parse(ApiConstants.login);
     final body = jsonEncode({
       "email": event.email,
       "password": event.password,
