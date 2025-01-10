@@ -259,15 +259,15 @@ class _MapContainerState extends State<MapContainer> {
         break;
 
       case 'MultiPoint':
-        await _handleMultiPointGeometry(coords, feature);
+        // await _handleMultiPointGeometry(coords, feature);
         break;
 
       case 'LineString':
-        await _handleLineStringGeometry(coords, feature);
+        // await _handleLineStringGeometry(coords, feature);
         break;
 
       case 'MultiLineString':
-        await _handleMultiLineStringGeometry(coords, feature);
+        // await _handleMultiLineStringGeometry(coords, feature);
         break;
 
       case 'Polygon':
@@ -280,7 +280,7 @@ class _MapContainerState extends State<MapContainer> {
 
       case 'GeometryCollection':
         // Pass the same geometryMap here
-        await _handleGeometryCollectionGeometry(geometryMap, feature);
+        // await _handleGeometryCollectionGeometry(geometryMap, feature);
         break;
 
       default:
