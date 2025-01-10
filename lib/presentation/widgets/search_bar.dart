@@ -1,13 +1,22 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import '../../domain/blocs/map_bloc.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
-import 'dart:convert';
 import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SearchBarAndResults extends StatefulWidget {
-  const SearchBarAndResults({Key? key}) : super(key: key);
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final Function(Map<String, dynamic>) onLocationSelected;
+  final MapBloc mapBloc; // Added this line
+
+  const SearchBarAndResults({
+    Key? key,
+    required this.scaffoldKey,
+    required this.onLocationSelected,
+    required this.mapBloc, // Added this parameter
+  }) : super(key: key);
 
   @override
   State<SearchBarAndResults> createState() => _SearchBarAndResultsState();
@@ -18,25 +27,26 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
   final TextEditingController _textController = TextEditingController();
   Timer? _debounce;
   bool _isSearching = false;
+  bool _isCameraMoving = false; // Flag to indicate camera movement
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: 20.0,
-      left: 10.0,
-      right: 10.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSearchBar(),
-          if (_searchResults.isNotEmpty) _buildResultsList(),
-          if (_isSearching)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-        ],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSearchBar(),
+        if (_searchResults.isNotEmpty) _buildResultsList(),
+        if (_isSearching)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+        if (_isCameraMoving)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+      ],
     );
   }
 
@@ -105,14 +115,112 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            onTap: () {
-              debugPrint("Result tapped: $result");
-              _moveCameraToLatLng(result);
+            onTap: () async {
+              debugPrint("Selected location: $result");
+              final details = await _fetchLocationDetails(result['id']);
+              // Show details for the location
+              debugPrint("Details for ${result['id']}: $details");
+              if (details != null) {
+                final geometry = details['geometry'];
+                if (geometry != null &&
+                    geometry['type'] == 'Point' &&
+                    geometry['coordinates'] is List) {
+                  final coordinates = geometry['coordinates'] as List;
+                  debugPrint("Coordinates: $coordinates");
+                  if (coordinates.length == 2 &&
+                      coordinates[0] != null &&
+                      coordinates[1] != null) {
+                    final lng = coordinates[0] is String
+                        ? double.tryParse(coordinates[0]) ?? 0.0
+                        : (coordinates[0] as num).toDouble();
+                    final lat = coordinates[1] is String
+                        ? double.tryParse(coordinates[1]) ?? 0.0
+                        : (coordinates[1] as num).toDouble();
+
+                    await _moveCameraToLatLng({
+                      'latitude': lat,
+                      'longitude': lng,
+                    });
+                  }
+                }
+                widget.onLocationSelected(details);
+
+                // **Pop the Search Bar**
+                setState(() {
+                  _textController.clear(); // Clears the search text
+                  _searchResults.clear(); // Hides the search results
+                });
+                FocusScope.of(context).unfocus(); // Dismisses the keyboard
+              }
             },
           );
         }).toList(),
       ),
     );
+  }
+
+  Future<Map<String, dynamic>?> _fetchLocationDetails(String id) async {
+    final url = Uri.parse('https://api.tap-map.net/api/points/$id/');
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        return json.decode(response.body) as Map<String, dynamic>;
+      } else {
+        debugPrint("Failed to fetch details for ID $id: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching details for ID $id: $e");
+    }
+    return null;
+  }
+
+  Future<void> _moveCameraToLatLng(Map<String, dynamic> result) async {
+    if (_isCameraMoving) {
+      debugPrint("Camera is already moving. Please wait.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Camera is moving. Please wait.")),
+      );
+      return;
+    }
+
+    final currentState = widget.mapBloc.state;
+
+    if (currentState.mapController == null) {
+      debugPrint("MapController is not set in MapBloc.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Map controller is not initialized.")),
+      );
+      return;
+    }
+
+    final controller = currentState.mapController!;
+    debugPrint("MapController is available: $controller");
+    debugPrint("MapController address: ${controller.hashCode}"); // Added for verification
+
+    final lat = result['latitude'] as double;
+    final lng = result['longitude'] as double;
+
+    debugPrint("Moving camera to Lat: $lat, Lng: $lng");
+
+    setState(() {
+      _isCameraMoving = true;
+    });
+
+    try {
+      await controller.animateCamera(
+        CameraUpdate.newLatLng(LatLng(lat, lng)),
+      );
+      debugPrint("Camera moved successfully.");
+    } catch (e) {
+      debugPrint("Error moving camera: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to move camera to the location.")),
+      );
+    } finally {
+      setState(() {
+        _isCameraMoving = false;
+      });
+    }
   }
 
   void _onSearchChanged(String query) {
@@ -151,25 +259,21 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
             };
           }).toList());
         });
+      } else {
+        debugPrint("Search API returned status code ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to fetch search results.")),
+        );
       }
+    } catch (e) {
+      debugPrint("Error performing search: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("An error occurred during search.")),
+      );
     } finally {
       setState(() {
         _isSearching = false;
       });
-    }
-  }
-
-  void _moveCameraToLatLng(Map<String, dynamic> result) {
-    final mapBloc = context.read<MapBloc>();
-
-    if (result.containsKey('latitude') && result.containsKey('longitude')) {
-      final lat = result['latitude'];
-      final lng = result['longitude'];
-      mapBloc.mapController?.animateCamera(
-        CameraUpdate.newLatLng(LatLng(lat, lng)),
-      );
-    } else {
-      debugPrint("LatLng not found for result: ${result['id']}");
     }
   }
 

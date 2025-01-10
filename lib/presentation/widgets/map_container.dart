@@ -1,26 +1,29 @@
-import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/blocs/map_bloc.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:async';
-import 'dart:math';
+import 'dart:typed_data'; // Ensure Uint8List is imported
 
-import '../../domain/map_controller.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+
+import '../../domain/blocs/map_bloc.dart';
+import '../../domain/map_controller.dart'; // Ensure this is your custom MapController or adjust accordingly
 
 class MapContainer extends StatefulWidget {
   final String mapboxUrl;
   final LatLng userLocation;
   final bool isLoading;
+  final MapBloc mapBloc; // Added this line
 
   const MapContainer({
     required this.mapboxUrl,
     required this.userLocation,
     required this.isLoading,
+    required this.mapBloc, // Added this parameter
     Key? key,
   }) : super(key: key);
 
@@ -102,10 +105,11 @@ class _MapContainerState extends State<MapContainer> {
                   target: const LatLng(7.8804, 98.3923),
                   zoom: 15,
                 ),
-                onMapCreated: (controller) async {
+                onMapCreated: (MapboxMapController controller) async {
                   _controller = controller;
-                  context.read<MapBloc>().mapController = controller;
-                  debugPrint("Map created and controller assigned.");
+                  // Use the passed MapBloc instance
+                  widget.mapBloc.setMapController(controller);
+                  debugPrint("Map created and controller set in MapBloc.");
                   await _addMarkerImage(_controller!);
                 },
                 onStyleLoadedCallback: () async {
@@ -114,14 +118,8 @@ class _MapContainerState extends State<MapContainer> {
                   await _addMarkerImage(_controller!);
                   await _addVectorTileSource();
                   await _addMarkersFromVectorTiles(
-                      const LatLng(7.8804, 98.3923));
-                  if (context.mounted) {
-                    context
-                        .read<MapBloc>()
-                        .emit(context.read<MapBloc>().state.copyWith(
-                              isLoading: false,
-                            ));
-                  }
+                    _controller!.cameraPosition!.target,
+                  );
                 },
                 onCameraIdle: _handleCameraIdle,
                 trackCameraPosition: true,
@@ -161,7 +159,7 @@ class _MapContainerState extends State<MapContainer> {
       _lastZoom = newZoom;
       await _addMarkersFromVectorTiles(newCenter);
     }
-  } 
+  }
 
   double _calculateDistanceInMeters(LatLng start, LatLng end) {
     const double earthRadius = 6371000; // in meters
@@ -220,7 +218,7 @@ class _MapContainerState extends State<MapContainer> {
       final screenPoint = await _controller!.toScreenLocation(location);
 
       final features = await _controller!.queryRenderedFeatures(
-        Point<double>(
+        math.Point<double>(
           screenPoint.x.toDouble(),
           screenPoint.y.toDouble(),
         ),
@@ -234,7 +232,7 @@ class _MapContainerState extends State<MapContainer> {
       // Process each feature
       for (var feature in features) {
         print("Feature: $feature");
-        if (feature is Map) {
+        if (feature is Map<String, dynamic>) {
           final geometryMap = feature['geometry'] as Map<String, dynamic>?;
           if (geometryMap == null) {
             debugPrint("Feature has no geometry. Skipping...");
@@ -264,7 +262,7 @@ class _MapContainerState extends State<MapContainer> {
   Future<void> _processGeometry(
     String geometryType,
     dynamic coords,
-    Map feature,
+    Map<String, dynamic> feature,
     Map<String, dynamic> geometryMap,
   ) async {
     switch (geometryType) {
@@ -273,7 +271,8 @@ class _MapContainerState extends State<MapContainer> {
         break;
 
       case 'MultiPoint':
-        await MapController(_controller!).handleMultiPointGeometry(coords, feature);
+        await MapController(_controller!)
+            .handleMultiPointGeometry(coords, feature);
         break;
 
       case 'LineString':

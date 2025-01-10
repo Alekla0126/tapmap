@@ -14,6 +14,7 @@ class MapState extends Equatable {
   final List<Map<String, String>> availableStyles;
   final List<Map<String, dynamic>> points;
   final bool isLoading;
+  final MapboxMapController? mapController;
 
   const MapState({
     required this.isDarkMode,
@@ -22,6 +23,7 @@ class MapState extends Equatable {
     this.availableStyles = const [],
     this.points = const [],
     this.isLoading = false,
+    this.mapController, // Initialize as null by default
   });
 
   MapState copyWith({
@@ -31,6 +33,7 @@ class MapState extends Equatable {
     List<Map<String, String>>? availableStyles,
     List<Map<String, dynamic>>? points,
     bool? isLoading,
+    MapboxMapController? mapController, // Handle the new property
   }) {
     return MapState(
       isDarkMode: isDarkMode ?? this.isDarkMode,
@@ -39,6 +42,7 @@ class MapState extends Equatable {
       availableStyles: availableStyles ?? this.availableStyles,
       points: points ?? this.points,
       isLoading: isLoading ?? this.isLoading,
+      mapController: mapController ?? this.mapController, // Direct assignment
     );
   }
 
@@ -50,6 +54,7 @@ class MapState extends Equatable {
         availableStyles,
         points,
         isLoading,
+        // Exclude mapController from props to prevent Equatable issues
       ];
 }
 
@@ -61,9 +66,6 @@ class MapBloc extends Cubit<MapState> {
 
   /// Index for which style is currently selected
   int _currentStyleIndex = 0;
-
-  /// Optionally store the MapboxMapController if needed by the UI
-  MapboxMapController? mapController;
 
   // -----------------------------------------------
   //  Constructor
@@ -95,6 +97,7 @@ class MapBloc extends Cubit<MapState> {
   // -----------------------------------------------
   int get currentStyleIndex => _currentStyleIndex;
   void setStyleIndex(int index) => _currentStyleIndex = index;
+  MapboxMapController? get mapController => state.mapController;
 
   // -----------------------------------------------
   //  Remote Config
@@ -191,5 +194,13 @@ class MapBloc extends Cubit<MapState> {
       mapboxUrl: newStyle,
       isLoading: false,
     ));
+  }
+
+  // -----------------------------------------------
+  //  MapController Management
+  // -----------------------------------------------
+  void setMapController(MapboxMapController controller) {
+    emit(state.copyWith(mapController: controller));
+    debugPrint("MapController has been set in MapBloc.");
   }
 }
