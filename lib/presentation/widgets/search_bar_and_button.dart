@@ -3,16 +3,16 @@ import 'package:tap_map_app/presentation/widgets/search_bar.dart';
 import '../../domain/blocs/map_bloc.dart';
 import 'package:flutter/material.dart';
 
-class SearchWithButton extends StatelessWidget {
+class SearchBarAndButton extends StatelessWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Function(Map<String, dynamic>) onLocationSelected;
-  final MapBloc mapBloc;
+  final MapBloc mapBloc; // Added this line
 
-  const SearchWithButton({
+  const SearchBarAndButton({
     Key? key,
     required this.scaffoldKey,
     required this.onLocationSelected,
-    required this.mapBloc,
+    required this.mapBloc, // Added this parameter
   }) : super(key: key);
 
   @override
@@ -21,7 +21,7 @@ class SearchWithButton extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start, // Align items at the top
       children: [
         // -------------------------
-        // MAP CONTROLLER (LEFT)
+        // MAP THEME SWITCHER (LEFT)
         // -------------------------
         Flexible(
           flex: 2,
@@ -37,7 +37,7 @@ class SearchWithButton extends StatelessWidget {
           child: SearchBarAndResults(
             scaffoldKey: scaffoldKey,
             onLocationSelected: onLocationSelected,
-            mapBloc: mapBloc,
+            mapBloc: mapBloc, // Passed here
           ),
         ),
       ],

@@ -23,7 +23,7 @@ class MapState extends Equatable {
     this.availableStyles = const [],
     this.points = const [],
     this.isLoading = false,
-    this.mapController, // Initialize as null by default
+    this.mapController, 
   });
 
   MapState copyWith({
@@ -66,6 +66,9 @@ class MapBloc extends Cubit<MapState> {
 
   /// Index for which style is currently selected
   int _currentStyleIndex = 0;
+
+  // Queue to hold pending camera movements
+  final List<LatLng> _cameraMoveQueue = [];
 
   // -----------------------------------------------
   //  Constructor
@@ -202,5 +205,42 @@ class MapBloc extends Cubit<MapState> {
   void setMapController(MapboxMapController controller) {
     emit(state.copyWith(mapController: controller));
     debugPrint("MapController has been set in MapBloc.");
+
+    // Process any pending camera movements
+    if (_cameraMoveQueue.isNotEmpty) {
+      for (var target in _cameraMoveQueue) {
+        moveCameraTo(target);
+      }
+      _cameraMoveQueue.clear();
+    }
+  }
+
+  bool get isMapControllerInitialized => mapController != null;
+
+  // -----------------------------------------------
+  //  Camera Movement
+  // -----------------------------------------------
+
+  /// Moves the camera to the specified [target] location.
+  Future<void> moveCameraTo(LatLng target) async {
+    final controller = state.mapController;
+    // if (controller == null) {
+    //   debugPrint("MapController is not initialized. Queuing camera movement to $target.");
+    //   _cameraMoveQueue.add(target);
+    //   return;
+    // }
+
+    emit(state.copyWith(isLoading: true));
+
+    try {
+      await controller!.animateCamera(
+        CameraUpdate.newLatLng(target),
+      );
+      debugPrint("Camera moved to: $target");
+    } catch (e) {
+      debugPrint("Error moving camera to $target: $e");
+    } finally {
+      emit(state.copyWith(isLoading: false));
+    }
   }
 }

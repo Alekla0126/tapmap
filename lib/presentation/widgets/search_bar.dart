@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import '../../domain/blocs/map_bloc.dart';
-import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:async';
 
 class SearchBarAndResults extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Function(Map<String, dynamic>) onLocationSelected;
-  final MapBloc mapBloc; // Added this line
+  final MapBloc mapBloc; // Ensure MapBloc is passed
 
   const SearchBarAndResults({
     Key? key,
     required this.scaffoldKey,
     required this.onLocationSelected,
-    required this.mapBloc, // Added this parameter
+    required this.mapBloc, // Ensure MapBloc is passed
   }) : super(key: key);
 
   @override
@@ -27,7 +27,6 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
   final TextEditingController _textController = TextEditingController();
   Timer? _debounce;
   bool _isSearching = false;
-  bool _isCameraMoving = false; // Flag to indicate camera movement
 
   @override
   Widget build(BuildContext context) {
@@ -37,11 +36,6 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
         _buildSearchBar(),
         if (_searchResults.isNotEmpty) _buildResultsList(),
         if (_isSearching)
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        if (_isCameraMoving)
           const Padding(
             padding: EdgeInsets.all(8.0),
             child: Center(child: CircularProgressIndicator()),
@@ -66,7 +60,7 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       ),
       child: TextField(
         controller: _textController,
-        onChanged: (value) => _onSearchChanged(value),
+        onChanged: _onSearchChanged,
         decoration: InputDecoration(
           hintText: "Search location...",
           prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 16),
@@ -118,15 +112,12 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
             onTap: () async {
               debugPrint("Selected location: $result");
               final details = await _fetchLocationDetails(result['id']);
-              // Show details for the location
-              debugPrint("Details for ${result['id']}: $details");
               if (details != null) {
                 final geometry = details['geometry'];
                 if (geometry != null &&
                     geometry['type'] == 'Point' &&
                     geometry['coordinates'] is List) {
                   final coordinates = geometry['coordinates'] as List;
-                  debugPrint("Coordinates: $coordinates");
                   if (coordinates.length == 2 &&
                       coordinates[0] != null &&
                       coordinates[1] != null) {
@@ -136,16 +127,18 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
                     final lat = coordinates[1] is String
                         ? double.tryParse(coordinates[1]) ?? 0.0
                         : (coordinates[1] as num).toDouble();
-
-                    await _moveCameraToLatLng({
-                      'latitude': lat,
-                      'longitude': lng,
-                    });
+                    debugPrint("Moving camera to $lat, $lng");
+                    // Ensure MapController is initialized before moving the camera
+                    if (widget.mapBloc.isMapControllerInitialized) {
+                      widget.mapBloc.moveCameraTo(LatLng(lat, lng));
+                    } else {
+                      debugPrint("MapController is not initialized. Cannot move camera.");
+                    }
                   }
                 }
                 widget.onLocationSelected(details);
 
-                // **Pop the Search Bar**
+                // **Reset the Search Bar**
                 setState(() {
                   _textController.clear(); // Clears the search text
                   _searchResults.clear(); // Hides the search results
@@ -172,55 +165,6 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       debugPrint("Error fetching details for ID $id: $e");
     }
     return null;
-  }
-
-  Future<void> _moveCameraToLatLng(Map<String, dynamic> result) async {
-    if (_isCameraMoving) {
-      debugPrint("Camera is already moving. Please wait.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Camera is moving. Please wait.")),
-      );
-      return;
-    }
-
-    final currentState = widget.mapBloc.state;
-
-    if (currentState.mapController == null) {
-      debugPrint("MapController is not set in MapBloc.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Map controller is not initialized.")),
-      );
-      return;
-    }
-
-    final controller = currentState.mapController!;
-    debugPrint("MapController is available: $controller");
-    debugPrint("MapController address: ${controller.hashCode}"); // Added for verification
-
-    final lat = result['latitude'] as double;
-    final lng = result['longitude'] as double;
-
-    debugPrint("Moving camera to Lat: $lat, Lng: $lng");
-
-    setState(() {
-      _isCameraMoving = true;
-    });
-
-    try {
-      await controller.animateCamera(
-        CameraUpdate.newLatLng(LatLng(lat, lng)),
-      );
-      debugPrint("Camera moved successfully.");
-    } catch (e) {
-      debugPrint("Error moving camera: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to move camera to the location.")),
-      );
-    } finally {
-      setState(() {
-        _isCameraMoving = false;
-      });
-    }
   }
 
   void _onSearchChanged(String query) {

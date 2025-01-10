@@ -52,7 +52,7 @@ class MapController {
         VectorSourceProperties(
           tiles: ['https://map-travel.net/tilesets/data/tiles/{z}/{x}/{y}.pbf'],
           minzoom: 0,
-          maxzoom: 18,
+          maxzoom: 15,
         ),
       );
     } catch (e) {

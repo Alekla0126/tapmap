@@ -21,22 +21,31 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<MapBloc>(create: (context) => MapBloc(MapRepository())),
-        BlocProvider<AuthBloc>(create: (context) => AuthBloc()),
-      ],
-      child: BlocBuilder<MapBloc, MapState>(
-        builder: (context, state) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'TapMap',
-            theme: ThemeData.light(),
-            darkTheme: ThemeData.dark(),
-            themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: const MapScreen(),
-          );
-        },
+    return RepositoryProvider(
+      // Providing MapRepository to the entire widget tree
+      create: (_) => MapRepository(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider<MapBloc>(
+            // Accessing MapRepository from RepositoryProvider
+            create: (context) => MapBloc(context.read<MapRepository>()),
+          ),
+          BlocProvider<AuthBloc>(
+            create: (context) => AuthBloc(),
+          ),
+        ],
+        child: BlocBuilder<MapBloc, MapState>(
+          builder: (context, state) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'TapMap',
+              theme: ThemeData.light(),
+              darkTheme: ThemeData.dark(),
+              themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              home: const MapScreen(),
+            );
+          },
+        ),
       ),
     );
   }

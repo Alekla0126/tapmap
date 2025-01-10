@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+import '../../presentation/widgets/search_bar_and_button.dart';
+import '../../presentation/widgets/map_container.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/blocs/map_bloc.dart';
-import '../../presentation/widgets/map_container.dart';
-import '../widgets/search_bar_and_button.dart';
-import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
+import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:flutter/material.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -70,7 +70,7 @@ class _MapScreenState extends State<MapScreen> {
                       state.userLocation.longitude == 0)) {
                 return const Center(child: CircularProgressIndicator());
               }
-              final mapboxUserLocation = mapbox.LatLng(
+              final mapboxUserLocation = LatLng(
                 state.userLocation.latitude,
                 state.userLocation.longitude,
               );
@@ -96,15 +96,18 @@ class _MapScreenState extends State<MapScreen> {
               return const SizedBox.shrink();
             },
           ),
-          // Add SearchWithButton widget at the top
+          // Add SearchBarAndButton widget at the top
           Positioned(
             top: 20.0,
             left: 20.0,
             right: 50.0,
-            child: SearchWithButton(
-              scaffoldKey: _scaffoldKey,
-              onLocationSelected: _setDrawerDetails,
-              mapBloc: mapBloc, // Passed here
+            child: BlocProvider.value(
+              value: mapBloc,
+              child: SearchBarAndButton(
+                scaffoldKey: _scaffoldKey,
+                onLocationSelected: _setDrawerDetails,
+                mapBloc: mapBloc,
+              ),
             ),
           ),
         ],

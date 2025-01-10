@@ -1,17 +1,15 @@
-import 'dart:math' as math;
-import 'dart:async';
-import 'dart:typed_data'; // Ensure Uint8List is imported
-
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
+import '../../domain/blocs/map_bloc.dart';
+import '../../domain/map_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
-
-import '../../domain/blocs/map_bloc.dart';
-import '../../domain/map_controller.dart'; // Ensure this is your custom MapController or adjust accordingly
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:async';
 
 class MapContainer extends StatefulWidget {
   final String mapboxUrl;
@@ -102,7 +100,7 @@ class _MapContainerState extends State<MapContainer> {
                 initialCameraPosition: CameraPosition(
                   // target: widget.userLocation,
                   // For debugging, set a location in Phuket:
-                  target: const LatLng(7.8804, 98.3923),
+                  target: const LatLng(7.8863829, 98.3877484),
                   zoom: 15,
                 ),
                 onMapCreated: (MapboxMapController controller) async {
@@ -119,7 +117,7 @@ class _MapContainerState extends State<MapContainer> {
                   await _addVectorTileSource();
                   await _addMarkersFromVectorTiles(
                     _controller!.cameraPosition!.target,
-                  );
+                  ); // Initial location
                 },
                 onCameraIdle: _handleCameraIdle,
                 trackCameraPosition: true,
@@ -199,7 +197,7 @@ class _MapContainerState extends State<MapContainer> {
         VectorSourceProperties(
           tiles: ['https://map-travel.net/tilesets/data/tiles/{z}/{x}/{y}.pbf'],
           minzoom: 0,
-          maxzoom: 18,
+          maxzoom: 15,
         ),
       );
       debugPrint("Vector tile source with clustering added successfully.");
@@ -222,12 +220,12 @@ class _MapContainerState extends State<MapContainer> {
           screenPoint.x.toDouble(),
           screenPoint.y.toDouble(),
         ),
-        [], // No layer ID filter
+        ['places'], // No layer ID filter
         null, // No filter
       );
 
       // Print the features
-      print("Found ${features.length} features at screen point $screenPoint");
+      print("Found ${features.length} features at screen point $location");
 
       // Process each feature
       for (var feature in features) {
