@@ -50,6 +50,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   dropdown_button2: ^2.3.9
   flutter_native_splash: ^2.4.4 
+  vector_tile: ^2.0.0
 
 dependency_overrides:
   mapbox_gl_platform_interface:

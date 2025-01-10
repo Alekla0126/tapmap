@@ -15,22 +15,28 @@ class SearchBarAndResults extends StatefulWidget {
 
 class _SearchBarAndResultsState extends State<SearchBarAndResults> {
   final List<Map<String, dynamic>> _searchResults = [];
+  final TextEditingController _textController = TextEditingController();
   Timer? _debounce;
   bool _isSearching = false;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _buildSearchBar(),
-        if (_searchResults.isNotEmpty) _buildResultsList(),
-        if (_isSearching)
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Center(child: CircularProgressIndicator()),
-          ),
-      ],
+    return Positioned(
+      top: 20.0,
+      left: 10.0,
+      right: 10.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildSearchBar(),
+          if (_searchResults.isNotEmpty) _buildResultsList(),
+          if (_isSearching)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        ],
+      ),
     );
   }
 
@@ -49,10 +55,22 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
         ],
       ),
       child: TextField(
+        controller: _textController,
         onChanged: (value) => _onSearchChanged(value),
         decoration: InputDecoration(
           hintText: "Search location...",
           prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 16),
+          suffixIcon: _textController.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.grey, size: 16),
+                  onPressed: () {
+                    _textController.clear();
+                    setState(() {
+                      _searchResults.clear();
+                    });
+                  },
+                )
+              : null,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 10,
@@ -68,27 +86,31 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(30),
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(20),
       ),
-      constraints: const BoxConstraints(maxHeight: 250),
-      child: ListView.builder(
-        shrinkWrap: true,
-        itemCount: _searchResults.length,
-        physics: const NeverScrollableScrollPhysics(), // Disable scrolling
-        itemBuilder: (context, index) {
-          final result = _searchResults[index];
+      child: Column(
+        children: _searchResults.take(5).map((result) {
           final placeName = result['name'] ?? 'Unnamed';
           final placeAddress = result['address'] ?? '';
 
           return ListTile(
-            title: Text(placeName),
-            subtitle: Text(placeAddress),
+            title: Text(
+              placeName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              placeAddress,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             onTap: () {
+              debugPrint("Result tapped: $result");
               _moveCameraToLatLng(result);
             },
           );
-        },
+        }).toList(),
       ),
     );
   }
@@ -121,14 +143,11 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final results = data['results'] as List<dynamic>;
         setState(() {
-          _searchResults.addAll(results.map((item) {
+          _searchResults.addAll(results.take(5).map((item) {
             return {
               'id': item['id'],
               'name': item['name'],
               'address': item['address'],
-              // Uncomment below if you receive latitude/longitude
-              // 'latitude': item['latitude'],
-              // 'longitude': item['longitude'],
             };
           }).toList());
         });
@@ -157,6 +176,7 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
   @override
   void dispose() {
     _debounce?.cancel();
+    _textController.dispose();
     super.dispose();
   }
 }

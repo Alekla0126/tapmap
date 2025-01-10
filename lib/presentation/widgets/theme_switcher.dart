@@ -37,9 +37,12 @@ class _MapThemeSwitcherState extends State<MapThemeSwitcher> {
               ),
               selectedItemBuilder: (context) {
                 return styles.map((style) {
-                  return Text(
-                    style['name']!,
-                    style: const TextStyle(color: Colors.white),
+                  return FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      style['name']!,
+                      style: const TextStyle(color: Colors.white),
+                    ),
                   );
                 }).toList();
               },

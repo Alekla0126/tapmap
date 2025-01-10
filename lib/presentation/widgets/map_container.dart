@@ -74,41 +74,53 @@ class _MapContainerState extends State<MapContainer> {
       width: MediaQuery.of(context).size.width,
       child: _accessToken == null || _accessToken!.isEmpty
           ? const Center(child: CircularProgressIndicator())
-          : MapboxMap(
-              gestureRecognizers: {
-                Factory<OneSequenceGestureRecognizer>(
-                  () => EagerGestureRecognizer(),
+          : GestureDetector(
+              onVerticalDragUpdate: (_) {},
+              child: MapboxMap(
+                gestureRecognizers: {
+                  Factory<PanGestureRecognizer>(() {
+                    return PanGestureRecognizer()
+                      ..onDown = (DragDownDetails details) {
+                        print(
+                          '[onDown]:\n'
+                          '  localPosition: ${details.localPosition}\n'
+                          '  globalPosition: ${details.globalPosition}',
+                        );
+                      };
+                  }),
+                },
+                key: UniqueKey(),
+                accessToken: _accessToken!,
+                styleString: widget.mapboxUrl,
+                initialCameraPosition: CameraPosition(
+                  // target: widget.userLocation,
+                  // For debugging, set a location in Phuket:
+                  target: const LatLng(7.8804, 98.3923),
+                  zoom: 15,
                 ),
-              },
-              key: UniqueKey(),
-              accessToken: _accessToken!,
-              styleString: widget.mapboxUrl,
-              initialCameraPosition: CameraPosition(
-                // target: widget.userLocation,
-                // For debugging, set a location in Phuket:
-                target: const LatLng(7.8804, 98.3923),
-                zoom: 15,
+                onMapCreated: (controller) async {
+                  _controller = controller;
+                  context.read<MapBloc>().mapController = controller;
+                  debugPrint("Map created and controller assigned.");
+                  await _addMarkerImage(_controller!);
+                },
+                onStyleLoadedCallback: () async {
+                  debugPrint(
+                      "Style loaded. Adding vector tiles and markers...");
+                  await _addMarkerImage(_controller!);
+                  await _addVectorTileSource();
+                  await _addMarkersFromVectorTiles(
+                      const LatLng(7.8804, 98.3923));
+                  if (context.mounted) {
+                    context
+                        .read<MapBloc>()
+                        .emit(context.read<MapBloc>().state.copyWith(
+                              isLoading: false,
+                            ));
+                  }
+                },
+                onCameraIdle: _handleCameraIdle, // Listen for camera idle
               ),
-              onMapCreated: (controller) async {
-                _controller = controller;
-                context.read<MapBloc>().mapController = controller;
-                debugPrint("Map created and controller assigned.");
-                await _addMarkerImage(_controller!);
-              },
-              onStyleLoadedCallback: () async {
-                debugPrint("Style loaded. Adding vector tiles and markers...");
-                await _addMarkerImage(_controller!);
-                await _addVectorTileSource();
-                await _addMarkersFromVectorTiles(const LatLng(7.8804, 98.3923));
-                if (context.mounted) {
-                  context
-                      .read<MapBloc>()
-                      .emit(context.read<MapBloc>().state.copyWith(
-                            isLoading: false,
-                          ));
-                }
-              },
-              onCameraIdle: _handleCameraIdle, // Listen for camera idle
             ),
     );
   }
@@ -202,10 +214,12 @@ class _MapContainerState extends State<MapContainer> {
         null, // No filter
       );
 
-      debugPrint("Features fetched: ${features}");
+      // Print the features
+      print("Found ${features.length} features at screen point $screenPoint");
 
       // Process each feature
       for (var feature in features) {
+        print("Feature: $feature");
         if (feature is Map) {
           final geometryMap = feature['geometry'] as Map<String, dynamic>?;
           if (geometryMap == null) {
