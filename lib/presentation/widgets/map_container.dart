@@ -10,6 +10,8 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'dart:math';
 
+import '../../domain/map_controller.dart';
+
 class MapContainer extends StatefulWidget {
   final String mapboxUrl;
   final LatLng userLocation;
@@ -32,7 +34,9 @@ class _MapContainerState extends State<MapContainer> {
 
   // Track last center and threshold for fetching
   LatLng? _lastCenter;
+  double? _lastZoom;
   final double _fetchThreshold = 10;
+  final double _zoomThreshold = 1.0;
 
   @override
   void initState() {
@@ -119,7 +123,8 @@ class _MapContainerState extends State<MapContainer> {
                             ));
                   }
                 },
-                onCameraIdle: _handleCameraIdle, // Listen for camera idle
+                onCameraIdle: _handleCameraIdle,
+                trackCameraPosition: true,
               ),
             ),
     );
@@ -128,26 +133,35 @@ class _MapContainerState extends State<MapContainer> {
   void _handleCameraIdle() async {
     if (_controller == null) return;
 
-    // Get the new center
+    // Get the new camera position
     final camPos = await _controller!.cameraPosition;
     final newCenter = camPos?.target;
+    final newZoom = camPos?.zoom;
 
-    if (_lastCenter == null) {
+    if (newCenter == null || newZoom == null) return;
+
+    // If first time, initialize center and zoom
+    if (_lastCenter == null || _lastZoom == null) {
       _lastCenter = newCenter;
+      _lastZoom = newZoom;
       return;
     }
 
-    // Calculate distance from last center
-    final distanceMoved = _calculateDistanceInMeters(_lastCenter!, newCenter!);
-    debugPrint("Map moved $distanceMoved meters from old center.");
+    // Calculate distance from last center and zoom difference
+    final distanceMoved = _calculateDistanceInMeters(_lastCenter!, newCenter);
+    final zoomDifference = (newZoom - _lastZoom!).abs();
+    debugPrint(
+        "Map moved $distanceMoved meters and zoom changed by $zoomDifference.");
 
-    // If threshold exceeded, re-fetch
-    if (distanceMoved > _fetchThreshold) {
-      debugPrint("Moved more than $_fetchThreshold meters => re-fetch data");
+    // If either threshold exceeded, re-fetch
+    if (distanceMoved > _fetchThreshold || zoomDifference > _zoomThreshold) {
+      debugPrint(
+          "Threshold exceeded (distance: $distanceMoved, zoom: $zoomDifference) => re-fetching data");
       _lastCenter = newCenter;
+      _lastZoom = newZoom;
       await _addMarkersFromVectorTiles(newCenter);
     }
-  }
+  } 
 
   double _calculateDistanceInMeters(LatLng start, LatLng end) {
     const double earthRadius = 6371000; // in meters
@@ -255,238 +269,36 @@ class _MapContainerState extends State<MapContainer> {
   ) async {
     switch (geometryType) {
       case 'Point':
-        await _handlePointGeometry(coords, feature);
+        await MapController(_controller!).handlePointGeometry(coords, feature);
         break;
 
       case 'MultiPoint':
-        // await _handleMultiPointGeometry(coords, feature);
+        await MapController(_controller!).handleMultiPointGeometry(coords, feature);
         break;
 
       case 'LineString':
-        // await _handleLineStringGeometry(coords, feature);
+        // MapController(_controller!).handleLineStringGeometry(coords, feature);
         break;
 
       case 'MultiLineString':
-        // await _handleMultiLineStringGeometry(coords, feature);
+        // MapController(_controller!).handleMultiLineStringGeometry(coords, feature);
         break;
 
       case 'Polygon':
-        // await _handlePolygonGeometry(coords, feature);
+        // MapController(_controller!).handlePolygonGeometry(coords, feature);
         break;
 
       case 'MultiPolygon':
-        //await _handleMultiPolygonGeometry(coords, feature);
+        // MapController(_controller!).handleMultiPolygonGeometry(coords, feature);
         break;
 
       case 'GeometryCollection':
         // Pass the same geometryMap here
-        // await _handleGeometryCollectionGeometry(geometryMap, feature);
+        // MapController(_controller!).handleGeometryCollectionGeometry(geometryMap, feature);
         break;
 
       default:
         debugPrint("Unsupported geometry type: $geometryType. Skipping...");
-    }
-  }
-
-  Future<void> _handleMultiPointGeometry(dynamic coords, Map feature) async {
-    if (coords is List) {
-      for (var point in coords) {
-        await _handlePointGeometry(point, feature);
-      }
-    } else {
-      debugPrint("Invalid MultiPoint coordinates structure. Skipping...");
-    }
-  }
-
-  Future<void> _handleMultiPolygonGeometry(dynamic coords, Map feature) async {
-    if (coords is List) {
-      for (var polygon in coords) {
-        await _handlePolygonGeometry(polygon, feature);
-      }
-    } else {
-      debugPrint("Invalid MultiPolygon structure. Skipping...");
-    }
-  }
-
-  Future<void> _handleGeometryCollectionGeometry(
-      Map<String, dynamic> geometryMap, Map feature) async {
-    final geometries = geometryMap['geometries'];
-    if (geometries is List) {
-      for (var geom in geometries) {
-        if (geom is Map) {
-          final subGeometryType = geom['type'];
-          final subCoords = geom['coordinates'];
-          await _processGeometry(subGeometryType, subCoords, feature,
-              geom as Map<String, dynamic>);
-        }
-      }
-    }
-  }
-
-  Future<void> _handlePointGeometry(dynamic coords, Map feature) async {
-    if (coords is List && coords.length == 2) {
-      final lng = coords[0] is num ? coords[0] as double : null;
-      final lat = coords[1] is num ? coords[1] as double : null;
-
-      if (lng == null || lat == null) {
-        debugPrint("Invalid Point coordinates. Skipping...");
-        return;
-      }
-
-      final properties = feature['properties'] as Map<String, dynamic>?;
-      final id = properties?['id']?.toString() ?? '';
-      final name = properties?['name']?.toString() ?? 'Unnamed';
-
-      debugPrint("Adding marker at LatLng($lat, $lng) with ID: $id");
-
-      await _controller!.addSymbol(
-        SymbolOptions(
-          geometry: LatLng(lat, lng),
-          iconImage: "custom-marker",
-          iconSize: 0.5,
-          textOffset: const Offset(0, 1),
-          textColor: "#000000",
-        ),
-      );
-    } else {
-      debugPrint("Invalid Point coordinates structure. Skipping...");
-    }
-  }
-
-  Future<void> _handleLineStringGeometry(dynamic coords, Map feature) async {
-    if (coords is List && coords.isNotEmpty) {
-      // Convert each [lng, lat] pair to LatLng
-      final lineLatLngs = <LatLng>[];
-      for (var coord in coords) {
-        if (coord is List && coord.length >= 2) {
-          final lng = coord[0];
-          final lat = coord[1];
-          if (lng is num && lat is num) {
-            lineLatLngs.add(LatLng(lat.toDouble(), lng.toDouble()));
-          }
-        }
-      }
-
-      if (lineLatLngs.length < 2) {
-        debugPrint("Invalid LineString coordinates. Need at least two points.");
-        return;
-      }
-
-      // Draw the line
-      await _controller?.addLine(
-        LineOptions(
-          geometry: lineLatLngs,
-          lineColor: "#3BB2D0", // Pick your color
-          lineWidth: 2.0, // Pick your width
-          lineOpacity: 1.0,
-        ),
-      );
-
-      // Optionally, place a marker at the midpoint
-      final start = lineLatLngs.first;
-      final end = lineLatLngs.last;
-      final midLat = (start.latitude + end.latitude) / 2;
-      final midLng = (start.longitude + end.longitude) / 2;
-
-      debugPrint(
-          "Adding LineString midpoint marker at LatLng($midLat, $midLng)");
-      await _controller?.addSymbol(
-        SymbolOptions(
-          geometry: LatLng(midLat, midLng),
-          iconImage: "custom-marker",
-          iconSize: 0.5,
-          textOffset: const Offset(0, 1),
-          textColor: "#000000",
-        ),
-      );
-    } else {
-      debugPrint("Invalid LineString coordinates structure. Skipping...");
-    }
-  }
-
-  Future<void> _handlePolygonGeometry(dynamic coords, Map feature) async {
-    if (coords is List) {
-      final List<List<double>> polygonCoords = [];
-      for (var pair in coords.first) {
-        if (pair is List &&
-            pair.length == 2 &&
-            pair[0] is num &&
-            pair[1] is num) {
-          polygonCoords.add([pair[0] as double, pair[1] as double]);
-        } else {
-          debugPrint("Invalid coordinate pair in Polygon: $pair");
-        }
-      }
-
-      if (polygonCoords.isNotEmpty) {
-        final centroidLat =
-            polygonCoords.map((pair) => pair[1]).reduce((a, b) => a + b) /
-                polygonCoords.length;
-        final centroidLng =
-            polygonCoords.map((pair) => pair[0]).reduce((a, b) => a + b) /
-                polygonCoords.length;
-
-        debugPrint(
-            "Adding marker for Polygon at LatLng($centroidLat, $centroidLng)");
-
-        await _controller!.addSymbol(
-          SymbolOptions(
-            geometry: LatLng(centroidLat, centroidLng),
-            iconImage: "custom-marker",
-            iconSize: 0.5,
-            textOffset: const Offset(0, 1),
-            textColor: "#000000",
-          ),
-        );
-      } else {
-        debugPrint("Invalid Polygon coordinates. Skipping...");
-      }
-    } else {
-      debugPrint("Invalid Polygon coordinates structure. Skipping...");
-    }
-  }
-
-  Future<void> _handleMultiLineStringGeometry(
-      dynamic coords, Map feature) async {
-    if (coords is List && coords.length > 1) {
-      final List<List<double>> flattenedCoords = coords.expand((segment) {
-        if (segment is List) {
-          return segment.whereType<List>().map((pair) {
-            if (pair.length == 2 && pair[0] is num && pair[1] is num) {
-              return [pair[0] as double, pair[1] as double];
-            }
-            return null;
-          }).whereType<List<double>>();
-        }
-        return <List<double>>[];
-      }).toList();
-
-      if (flattenedCoords.isNotEmpty) {
-        final centerLat =
-            flattenedCoords.map((pair) => pair[1]).reduce((a, b) => a + b) /
-                flattenedCoords.length;
-        final centerLng =
-            flattenedCoords.map((pair) => pair[0]).reduce((a, b) => a + b) /
-                flattenedCoords.length;
-
-        debugPrint(
-            "Adding marker for flattened MultiLineString at LatLng($centerLat, $centerLng)");
-
-        await _controller!.addSymbol(
-          SymbolOptions(
-            geometry: LatLng(centerLat, centerLng),
-            iconImage: "custom-marker",
-            iconSize: 0.5,
-            textOffset: const Offset(0, 1),
-            textColor: "#000000",
-          ),
-        );
-      } else {
-        debugPrint(
-            "No valid coordinates found in MultiLineString. Skipping...");
-      }
-    } else {
-      debugPrint("Invalid MultiLineString structure. Skipping...");
     }
   }
 
