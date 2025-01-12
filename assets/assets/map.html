@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Mapbox Dynamic Layers</title>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    // Mapbox token
+    mapboxgl.accessToken = 'pk.eyJ1IjoibWFwMjN0cmF2ZWwiLCJhIjoiY20xMDV4eGJ5MGVhejJrc2dzOXUxZGM5bCJ9.AZdS5yS841WJ0uUbD6kE0g';
+
+    // Initialize the map
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [37.7749, -122.4194], // San Francisco
+      zoom: 10
+    });
+
+    const placeLayerId = 'places';
+
+    // Helper function to add dynamic layers
+    function addPlacesLayer(map) {
+      if (!map.getSource('places')) {
+        map.addSource('places', {
+          type: 'vector',
+          tiles: ['https://map-travel.net/tilesets/data/tiles/{z}/{x}/{y}.pbf'], // Replace with your valid tileset
+          minzoom: 0,
+          maxzoom: 18
+        });
+      }
+
+      if (!map.getLayer(placeLayerId)) {
+        map.addLayer({
+          id: placeLayerId,
+          type: 'symbol',
+          source: 'places',
+          'source-layer': 'mylayer', // Replace with your actual source layer name
+          layout: {
+            'icon-image': 'marker-15',
+            'icon-size': 1.5,
+            'text-field': ['get', 'name'],
+            'text-font': ['Open Sans Bold'],
+            'text-size': 14,
+            'text-offset': [0, 0.6],
+            'text-anchor': 'top',
+          },
+          paint: {
+            'text-color': '#ffffff',
+            'text-halo-color': 'rgba(0, 0, 0, 0.75)',
+            'text-halo-width': 2
+          }
+        });
+
+        // Add interactivity
+        map.on('click', placeLayerId, (e) => {
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const name = e.features[0].properties.name;
+
+          new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(`<strong>${name}</strong>`)
+            .addTo(map);
+        });
+
+        map.on('mouseenter', placeLayerId, () => {
+          map.getCanvas().style.cursor = 'pointer';
+        });
+
+        map.on('mouseleave', placeLayerId, () => {
+          map.getCanvas().style.cursor = '';
+        });
+      }
+    }
+
+    // Wait for the map to load before adding layers
+    map.on('load', () => {
+      addPlacesLayer(map);
+    });
+  </script>
+</body>
+</html>
