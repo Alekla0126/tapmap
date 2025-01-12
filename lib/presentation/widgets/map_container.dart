@@ -1,27 +1,24 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mapbox_gl/mapbox_gl.dart';
-import '../../domain/blocs/map_bloc.dart';
 import '../../domain/map_controller.dart';
+import '../../domain/blocs/map_bloc.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:async';
 
 class MapContainer extends StatefulWidget {
   final String mapboxUrl;
   final LatLng userLocation;
   final bool isLoading;
-  final MapBloc mapBloc; // Added this line
 
   const MapContainer({
     required this.mapboxUrl,
     required this.userLocation,
     required this.isLoading,
-    required this.mapBloc, // Added this parameter
     Key? key,
   }) : super(key: key);
 
@@ -36,7 +33,7 @@ class _MapContainerState extends State<MapContainer> {
   // Track last center and threshold for fetching
   LatLng? _lastCenter;
   double? _lastZoom;
-  final double _fetchThreshold = 10;
+  final double _fetchThreshold = 50;
   final double _zoomThreshold = 1.0;
 
   @override
@@ -100,24 +97,37 @@ class _MapContainerState extends State<MapContainer> {
                 initialCameraPosition: CameraPosition(
                   // target: widget.userLocation,
                   // For debugging, set a location in Phuket:
-                  target: const LatLng(7.8863829, 98.3877484),
-                  zoom: 15,
+                  target: const LatLng(7.8804, 98.3923),
+                  zoom: 12,
                 ),
-                onMapCreated: (MapboxMapController controller) async {
+                onMapCreated: (controller) async {
                   _controller = controller;
-                  // Use the passed MapBloc instance
-                  widget.mapBloc.setMapController(controller);
-                  debugPrint("Map created and controller set in MapBloc.");
+                  context.read<MapBloc>().mapController = controller;
+                  debugPrint("Map created and controller assigned.");
                   await _addMarkerImage(_controller!);
                 },
                 onStyleLoadedCallback: () async {
                   debugPrint(
                       "Style loaded. Adding vector tiles and markers...");
+                  debugPrint("Map created and controller assigned.");
+
+                  // Add marker click handler
+                  _controller!.onSymbolTapped.add((symbol) async {
+                    // Access and debug the symbol's properties
+                    await _queryFeatures();
+                  });
+
                   await _addMarkerImage(_controller!);
                   await _addVectorTileSource();
                   await _addMarkersFromVectorTiles(
-                    _controller!.cameraPosition!.target,
-                  ); // Initial location
+                      const LatLng(7.8804, 98.3923));
+                  if (context.mounted) {
+                    context
+                        .read<MapBloc>()
+                        .emit(context.read<MapBloc>().state.copyWith(
+                              isLoading: false,
+                            ));
+                  }
                 },
                 onCameraIdle: _handleCameraIdle,
                 trackCameraPosition: true,
@@ -197,9 +207,25 @@ class _MapContainerState extends State<MapContainer> {
         VectorSourceProperties(
           tiles: ['https://map-travel.net/tilesets/data/tiles/{z}/{x}/{y}.pbf'],
           minzoom: 0,
-          maxzoom: 15,
+          maxzoom: 12,
         ),
       );
+
+      // Add a layer using the vector tile source
+      // await _controller!.addLayer(
+      //   'places-layer', // Layer ID
+      //   'places', // Source ID
+      //   SymbolLayerProperties(
+      //     iconImage:
+      //         '{marker_type}', // Use the `marker_type` property for icons
+      //     textField: '{name}', // Use the `name` property for text
+      //     textSize: 14,
+      //     textColor: "#ffffff",
+      //     iconSize: 0.5,
+      //     visibility: 'visible',
+      //   ),
+      // );
+
       debugPrint("Vector tile source with clustering added successfully.");
     } catch (e) {
       debugPrint("Error adding vector tile source: $e");
@@ -210,57 +236,57 @@ class _MapContainerState extends State<MapContainer> {
     if (_controller == null) return;
 
     try {
-      debugPrint("Attempting to fetch features...");
+      debugPrint("Attempting to fetch features for the current viewport...");
 
-      // Convert user location (or debugging point) to screen coordinates
-      final screenPoint = await _controller!.toScreenLocation(location);
+      // Get the bounds of the current viewport
+      final bounds = await _controller!.getVisibleRegion();
 
-      final features = await _controller!.queryRenderedFeatures(
-        math.Point<double>(
-          screenPoint.x.toDouble(),
-          screenPoint.y.toDouble(),
+      // Query features for the entire viewport bounds
+      final features = await _controller!.queryRenderedFeaturesInRect(
+        Rect.fromLTRB(
+          0,
+          0,
+          MediaQuery.of(context).size.width,
+          MediaQuery.of(context).size.height,
         ),
-        ['places'], // No layer ID filter
-        null, // No filter
+        [], // Filter to the specific layer
+        null, // No additional filter
       );
 
-      // Print the features
-      print("Found ${features.length} features at screen point $location");
+      // Print the number of features
+      debugPrint("Fetched ${features.length} features.");
 
       // Process each feature
       for (var feature in features) {
-        print("Feature: $feature");
-        if (feature is Map<String, dynamic>) {
-          final geometryMap = feature['geometry'] as Map<String, dynamic>?;
-          if (geometryMap == null) {
-            debugPrint("Feature has no geometry. Skipping...");
-            continue;
+        // debugPrint("The feature is: $feature");
+        if (feature is Map) {
+          final geometry = feature['geometry'] as Map<String, dynamic>?;
+          if (geometry != null) {
+            final geometryType = geometry['type'] as String?;
+            final coordinates = geometry['coordinates'];
+
+            if (geometryType != null && coordinates != null) {
+              await _processGeometry(
+                  geometryType, coordinates, feature, geometry);
+            } else {
+              debugPrint("Invalid geometry or coordinates. Skipping...");
+            }
           }
-
-          final geometryType = geometryMap['type'] as String?;
-          final coords = geometryMap['coordinates'];
-
-          if (geometryType == null || coords == null) {
-            debugPrint("Invalid geometry type or coordinates. Skipping...");
-            continue;
-          }
-
-          await _processGeometry(geometryType, coords, feature, geometryMap);
         } else {
           debugPrint("Unexpected feature format. Skipping...");
         }
       }
 
-      debugPrint("All markers added successfully.");
+      debugPrint("All features processed successfully.");
     } catch (e) {
-      debugPrint("Error adding markers from vector tiles: $e");
+      debugPrint("Error fetching features: $e");
     }
   }
 
   Future<void> _processGeometry(
     String geometryType,
     dynamic coords,
-    Map<String, dynamic> feature,
+    Map feature,
     Map<String, dynamic> geometryMap,
   ) async {
     switch (geometryType) {
@@ -299,9 +325,46 @@ class _MapContainerState extends State<MapContainer> {
     }
   }
 
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
+  Future<void> _queryFeatures() async {
+    if (_controller == null) return;
+
+    try {
+      final List<dynamic> features =
+          await _controller!.queryRenderedFeaturesInRect(
+        Rect.fromLTRB(
+          0,
+          0,
+          MediaQuery.of(context).size.width,
+          MediaQuery.of(context).size.height,
+        ),
+        ['places-layer'], // Specify your layer ID here
+        null, // Additional filter expression for properties
+      );
+
+      for (var feature in features) {
+        debugPrint("The feature is: $feature");
+
+        if (feature is Map) {
+          final properties = feature['properties'] as Map<String, dynamic>?;
+          if (properties != null) {
+            final featureId = properties['id'];
+            final featureName = properties['name'];
+            debugPrint("Feature ID: $featureId, Name: $featureName");
+          } else {
+            debugPrint("Feature has no properties.");
+          }
+        } else {
+          debugPrint("Unexpected feature format.");
+        }
+      }
+    } catch (e) {
+      debugPrint("Error querying features: $e");
+    }
   }
+
+  // @override
+  // void dispose() {
+  //   _controller?.dispose();
+  //   super.dispose();
+  // }
 }

@@ -1,16 +1,13 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/material.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'dart:typed_data';
-import 'dart:math';
 
 class MapController {
   MapboxMapController controller;
   String? accessToken;
   LatLng? lastCenter;
-  final double fetchThreshold = 500;
+  final double fetchThreshold = 50;
 
   MapController(this.controller);
 
@@ -32,59 +29,6 @@ class MapController {
       }
     } catch (e) {
       throw Exception("Failed to load map configuration: $e");
-    }
-  }
-
-  Future<void> addMarkerImage() async {
-    try {
-      final byteData = await rootBundle.load("assets/marker.png");
-      final Uint8List imageBytes = byteData.buffer.asUint8List();
-      await controller.addImage("custom-marker", imageBytes);
-    } catch (e) {
-      throw Exception("Error loading marker image: $e");
-    }
-  }
-
-  Future<void> addVectorTileSource() async {
-    try {
-      await controller.addSource(
-        'places',
-        VectorSourceProperties(
-          tiles: ['https://map-travel.net/tilesets/data/tiles/{z}/{x}/{y}.pbf'],
-          minzoom: 0,
-          maxzoom: 15,
-        ),
-      );
-    } catch (e) {
-      throw Exception("Error adding vector tile source: $e");
-    }
-  }
-
-  Future<void> addMarkersFromVectorTiles(LatLng location) async {
-    try {
-      final screenPoint = await controller.toScreenLocation(location);
-      final features = await controller.queryRenderedFeatures(
-        Point<double>(
-          screenPoint.x.toDouble(),
-          screenPoint.y.toDouble(),
-        ),
-        [],
-        null,
-      );
-
-      for (var feature in features) {
-        if (feature is Map) {
-          final geometryMap = feature['geometry'] as Map<String, dynamic>?;
-          if (geometryMap == null) continue;
-          final geometryType = geometryMap['type'] as String?;
-          final coords = geometryMap['coordinates'];
-
-          if (geometryType == null || coords == null) continue;
-          await _processGeometry(geometryType, coords, feature, geometryMap);
-        }
-      }
-    } catch (e) {
-      throw Exception("Error adding markers from vector tiles: $e");
     }
   }
 

@@ -45,12 +45,17 @@ dependencies:
   http: ^1.2.2
   mapbox_gl:
     git:
-      url: https://github.com/flutter-mapbox-gl/maps.git   
+      url: https://github.com/flutter-mapbox-gl/maps.git
+  # mapbox_gl_flutterflow: ^1.0.7 
   shared_preferences: ^2.3.4
   flutter_secure_storage: ^9.2.2
   dropdown_button2: ^2.3.9
   flutter_native_splash: ^2.4.4 
   vector_tile: ^2.0.0
+  vector_tile_renderer: ^6.0.0
+  vector_map_tiles: ^9.0.0-beta.6
+  webview_flutter: ^4.10.0
+  flutter_inappwebview: ^6.1.5
 
 dependency_overrides:
   mapbox_gl_platform_interface:
@@ -94,3 +99,4 @@ flutter:
   assets:
     - assets/web/
     - assets/marker.png
+    - assets/map.html

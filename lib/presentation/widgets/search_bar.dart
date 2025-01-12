@@ -129,8 +129,10 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
                         : (coordinates[1] as num).toDouble();
                     debugPrint("Moving camera to $lat, $lng");
                     // Ensure MapController is initialized before moving the camera
-                    if (widget.mapBloc.isMapControllerInitialized) {
-                      widget.mapBloc.moveCameraTo(LatLng(lat, lng));
+                    if (widget.mapBloc.mapController != null) {
+                      widget.mapBloc.mapController!.moveCamera(
+                        CameraUpdate.newLatLng(LatLng(lat, lng)),
+                      );
                     } else {
                       debugPrint("MapController is not initialized. Cannot move camera.");
                     }

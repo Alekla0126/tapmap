@@ -54,7 +54,7 @@ class MapRepository {
 
   /// Fetches points from an API or uses cached data if available
   Future<List<Map<String, dynamic>>> fetchPoints() async {
-    const String apiUrl = ApiConstants.featureCollection ;
+    const String apiUrl = ApiConstants.featureCollection;
     final prefs = await SharedPreferences.getInstance();
 
     // Check cache
