@@ -27,7 +27,7 @@ class MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<MapBloc>(
-      create: (context) => MapBloc(MapRepository()),
+      create: (_) => MapBloc(MapRepository()),
       child: Builder(
         builder: (context) {
           return Scaffold(
@@ -42,10 +42,11 @@ class MapScreenState extends State<MapScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _drawerDetails!['properties']['name'] ??
-                                  'Unnamed',
+                              _drawerDetails!['properties']['name'] ?? 'Unnamed',
                               style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             Text(
@@ -70,15 +71,19 @@ class MapScreenState extends State<MapScreen> {
                 // Main map rendering
                 BlocBuilder<MapBloc, MapState>(
                   builder: (context, state) {
+                    // If we haven't loaded mapboxUrl or userLocation yet,
+                    // show a global spinner.
                     if (state.mapboxUrl.isEmpty ||
                         (state.userLocation.latitude == 0 &&
                             state.userLocation.longitude == 0)) {
                       return const Center(child: CircularProgressIndicator());
                     }
+
                     final mapboxUserLocation = mapbox.LatLng(
                       state.userLocation.latitude,
                       state.userLocation.longitude,
                     );
+
                     return MapContainer(
                       mapboxUrl: state.mapboxUrl,
                       userLocation: mapboxUserLocation,
@@ -86,7 +91,8 @@ class MapScreenState extends State<MapScreen> {
                     );
                   },
                 ),
-                // Loading overlay
+
+                // A global overlay if state.isLoading from the bloc is true
                 BlocBuilder<MapBloc, MapState>(
                   builder: (context, state) {
                     if (state.isLoading) {
@@ -100,21 +106,7 @@ class MapScreenState extends State<MapScreen> {
                     return const SizedBox.shrink();
                   },
                 ),
-                // Loading overlay
-                BlocBuilder<MapBloc, MapState>(
-                  builder: (context, state) {
-                    if (state.isLoading) {
-                      return Container(
-                        color: Colors.black54,
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-                // Add SearchBarAndButton widget
+                // The Search bar and button at the top
                 Positioned(
                   top: 20.0,
                   left: 20.0,
