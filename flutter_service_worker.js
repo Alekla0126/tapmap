@@ -16,7 +16,7 @@ const RESOURCES = {"icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2e
 "assets/assets/web/apple-touch-icon.png": "05775eb1f9a6546c8545baadb12c201f",
 "assets/assets/web/icon-512-maskable.png": "fdefe76ed81ba3b46b5e5189a858c312",
 "assets/assets/map.html": "d9f651e937db06544db124c491d08364",
-"assets/assets/mylocation.png": "761ac1704a05f09d939e7957dc118f82",
+"assets/assets/mylocation.png": "66f4eb70102b51b3bd52b730124f71dd",
 "assets/AssetManifest.bin": "eb7985677d233d3b93093572bd48177d",
 "assets/NOTICES": "6cd4e58134b8412bda58b4a2ffe65be1",
 "assets/AssetManifest.json": "7687aa58d9edb5318334668c737e68f3",
@@ -53,7 +53,7 @@ const RESOURCES = {"icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2e
 "/": "1d8fa1983c1050eb1a784a467ced4dc0",
 "flutter.js": "4b2350e14c6650ba82871f60906437ea",
 "favicon.png": "5dcef449791fa27946b3d35ad8803796",
-"flutter_bootstrap.js": "51e339e4ba4b42fe6753afb0f8b32b12",
+"flutter_bootstrap.js": "534a78b2010592f610dc91d94522831d",
 "main.dart.js": "507cf9b49a3ce32d6cb2306926cbf5ab"};
 // The application shell files that are downloaded before a service worker can
 // start.
