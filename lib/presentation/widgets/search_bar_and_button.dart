@@ -10,8 +10,8 @@ class SearchBarAndButton extends StatelessWidget {
 
   const SearchBarAndButton({
     super.key,
-    required this.scaffoldKey,
     required this.onLocationSelected,
+    required this.scaffoldKey,
     required this.controller,
   });
 
@@ -35,8 +35,8 @@ class SearchBarAndButton extends StatelessWidget {
         Flexible(
           flex: 5,
           child: SearchBarAndResults(
-            scaffoldKey: scaffoldKey,
             onLocationSelected: onLocationSelected,
+            scaffoldKey: scaffoldKey,
             controller: controller, // Passed here
           ),
         ),

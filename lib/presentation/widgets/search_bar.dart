@@ -128,7 +128,7 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
                     debugPrint("Moving camera to $lat, $lng");
                     // Ensure MapController is initialized before moving the camera
                     widget.controller!.moveCamera(
-                      CameraUpdate.newLatLng(LatLng(lat, lng)),
+                      CameraUpdate.newLatLngZoom(LatLng(lat, lng), 16),
                     );
                   }
                 }
@@ -193,12 +193,10 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        final data = json.decode(response.body) as Map<String, dynamic>;
-        final results = data['results'] as List<dynamic>;
+        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        var results = data['results'] as List<dynamic>;
 
-        // Print the results to the console
-        debugPrint("Search results: $results");
-
+        // Set the first 5 results to the search results
         setState(() {
           _searchResults.addAll(results.take(5).map((item) {
             return {
