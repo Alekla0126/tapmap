@@ -4,7 +4,7 @@ import '../../domain/repositories/map_repository.dart';
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import '../../domain/map_controller.dart';
+import '../../domain/controllers/map_controller.dart';
 import '../../domain/blocs/map_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;

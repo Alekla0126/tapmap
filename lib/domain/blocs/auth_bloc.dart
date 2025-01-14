@@ -20,10 +20,18 @@ class LoginEvent extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
+class ForgotPasswordEvent extends AuthEvent {
+  final String email;
+
+  ForgotPasswordEvent({required this.email});
+}
+
 abstract class AuthState extends Equatable {
   @override
   List<Object?> get props => [];
 }
+
+class PasswordResetSuccess extends AuthState {}
 
 class AuthInitial extends AuthState {}
 

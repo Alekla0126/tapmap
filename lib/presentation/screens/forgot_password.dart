@@ -1,47 +1,23 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/blocs/auth_bloc.dart';
-import '../../../domain/blocs/map_bloc.dart';
 import 'package:flutter/material.dart';
-import 'forgot_password.dart';
-import 'map_screen.dart';
-import 'register.dart';
 
-class LoginScreen extends StatelessWidget {
-  final TextEditingController _passwordController = TextEditingController();
+class ForgotPasswordScreen extends StatelessWidget {
   final TextEditingController _emailController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    // Dispatch CheckTokenEvent when the screen is loaded.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<AuthBloc>().add(CheckTokenEvent());
-    });
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Tap Map"),
-        actions: [
-          BlocBuilder<MapBloc, MapState>(
-            builder: (context, state) {
-              return IconButton(
-                icon: Icon(state.isDarkMode ? Icons.dark_mode : Icons.light_mode),
-                onPressed: () {
-                  context.read<MapBloc>().toggleTheme();
-                },
-              );
-            },
-          ),
-        ],
+        title: const Text("Forgot My Password"),
       ),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthSuccess) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MapScreen(),
-              ),
+          if (state is PasswordResetSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Password reset email sent!")),
             );
+            Navigator.pop(context); // Navigate back to LoginScreen
           } else if (state is AuthFailure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text(state.error)),
@@ -57,15 +33,8 @@ class LoginScreen extends StatelessWidget {
                 _buildRoundedTextField(
                   context,
                   controller: _emailController,
-                  labelText: "Email",
+                  labelText: "Enter your email",
                   keyboardType: TextInputType.emailAddress,
-                ),
-                const SizedBox(height: 20),
-                _buildRoundedTextField(
-                  context,
-                  controller: _passwordController,
-                  labelText: "Password",
-                  obscureText: true,
                 ),
                 const SizedBox(height: 20),
                 BlocBuilder<AuthBloc, AuthState>(
@@ -75,55 +44,23 @@ class LoginScreen extends StatelessWidget {
                     }
                     return _buildRoundedButton(
                       context,
-                      text: "Login",
+                      text: "Send Reset Link",
                       onPressed: () {
                         final email = _emailController.text.trim();
-                        final password = _passwordController.text.trim();
-                        if (email.isNotEmpty && password.isNotEmpty) {
-                          context.read<AuthBloc>().add(
-                                LoginEvent(email: email, password: password),
-                              );
+                        if (email.isNotEmpty) {
+                          // context.read<AuthBloc>().add(
+                          //       ForgotPasswordEvent(email: email),
+                          //     );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Please enter email and password'),
+                              content: Text('Please enter your email'),
                             ),
                           );
                         }
                       },
                     );
                   },
-                ),
-                const SizedBox(height: 20), // Add spacing between the buttons
-                _buildRoundedButton(
-                  context,
-                  text: "Register",
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RegisterScreen(), // Navigate to RegisterScreen
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 20), // Add spacing before Forgot Password
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ForgotPasswordScreen(), // Navigate to ForgotPasswordScreen
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    "Forgot My Password?",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blue,
-                    ),
-                  ),
                 ),
               ],
             ),
