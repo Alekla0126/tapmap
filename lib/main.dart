@@ -1,8 +1,8 @@
 import 'package:tap_map_app/presentation/screens/map_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'domain/repositories/map_repository.dart';
 import 'presentation/screens/login_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/material.dart';
 import 'domain/blocs/auth_bloc.dart';
 import 'domain/blocs/map_bloc.dart';
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
             theme: ThemeData.light(),
             darkTheme: ThemeData.dark(),
             themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: MapScreen(),
+            home: LoginScreen(),
           );
         },
       ),
