@@ -1,4 +1,3 @@
-import 'package:tap_map_app/presentation/screens/map_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'domain/repositories/map_repository.dart';
 import 'presentation/screens/login_screen.dart';
