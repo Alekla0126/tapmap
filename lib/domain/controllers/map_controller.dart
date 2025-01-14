@@ -1,4 +1,5 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:vector_tile/vector_tile.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
@@ -25,17 +26,6 @@ class MapController {
   //  Marker + Vector Tile Logic
   // -------------------------------------------------------------
   Future<void> addMarkerImage(MapboxMapController controller) async {
-    try {
-      final byteData = await rootBundle.load("assets/marker.png");
-      final Uint8List imageBytes = byteData.buffer.asUint8List();
-      await controller.addImage("custom-marker", imageBytes);
-      debugPrint("Custom marker image added to style.");
-    } catch (e) {
-      debugPrint("Error loading marker image: $e");
-    }
-  }
-
-  Future<void> addMarker(MapboxMapController controller) async {
     try {
       final byteData = await rootBundle.load("assets/marker.png");
       final Uint8List imageBytes = byteData.buffer.asUint8List();
@@ -154,20 +144,27 @@ class MapController {
   }
 
   /// Add symbols 10 at a time so we don't block the UI too long.
+  // Use Flutter's compute() to split symbols into chunks on a separate isolate
   Future<void> _addSymbolsInChunks(List<_SymbolData> symbols) async {
     if (symbols.isEmpty) return;
 
-    const chunkSize = 10;
-    for (var i = 0; i < symbols.length; i += chunkSize) {
-      final chunk = symbols.sublist(i, math.min(i + chunkSize, symbols.length));
-
+    final chunks = await compute(_chunkSymbols, symbols);
+    for (final chunk in chunks) {
       for (final s in chunk) {
         await controller.addSymbol(s.options, s.data);
       }
-
-      // Yield to the event loop
       await Future.delayed(const Duration(milliseconds: 16));
     }
+  }
+
+  // Top-level function for compute()
+  List<List<_SymbolData>> _chunkSymbols(List<_SymbolData> symbols) {
+    const chunkSize = 10;
+    final result = <List<_SymbolData>>[];
+    for (var i = 0; i < symbols.length; i += chunkSize) {
+      result.add(symbols.sublist(i, math.min(i + chunkSize, symbols.length)));
+    }
+    return result;
   }
 
   // Decode geometry
