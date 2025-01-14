@@ -126,7 +126,11 @@ class MapScreenState extends State<MapScreen> {
                         },
                         onStyleLoadedCallback: () async {
                           debugPrint(
-                              "Style loaded. Attempting to place user marker FIRST THING...");
+                            "Style loaded. Attempting to place user marker FIRST THING...",
+                          );
+
+                          // Mark the style as loaded
+                          _isStyleLoaded = true;
 
                           if (_controller != null) {
                             // 1) Create your MapController wrapper
@@ -153,10 +157,12 @@ class MapScreenState extends State<MapScreen> {
                                 iconImageId: 'mylocation_marker',
                               );
                               debugPrint(
-                                  "Marker placed at ($lat, $lng) immediately in onStyleLoadedCallback.");
+                                "Marker placed at ($lat, $lng) immediately in onStyleLoadedCallback.",
+                              );
                             } else {
                               debugPrint(
-                                  "User location is (0,0). Skipping immediate placement.");
+                                "User location is (0,0). Skipping immediate placement.",
+                              );
                             }
 
                             // 4) (Optional) Animate the camera to ensure the marker is visible
@@ -177,13 +183,17 @@ class MapScreenState extends State<MapScreen> {
                             // Remove old tap handler to avoid duplicates
                             _controller?.onSymbolTapped
                                 .remove(_handleMarkerClick);
+
                             // Add the new tap handler
                             _controller?.onSymbolTapped.add(_handleMarkerClick);
 
                             // 6) Continue with your existing vector tile calls, etc.
                             await myController.addVectorTileSource();
                             await myController.decodeAndAddMarkersFromTile(
-                                zoom: 0, x: 0, y: 0);
+                              zoom: 0,
+                              x: 0,
+                              y: 0,
+                            );
                           }
                         },
                         onCameraIdle: () async {
@@ -363,8 +373,7 @@ class MapScreenState extends State<MapScreen> {
         return json.decode(utf8.decode(response.bodyBytes))
             as Map<String, dynamic>;
       } else {
-        debugPrint(
-            "Failed to fetch details for ID $id: ${response.statusCode}");
+        debugPrint("Failed to fetch details for ID $id: ${response.statusCode}");
       }
     } catch (e) {
       debugPrint("Error fetching details for ID $id: $e");
