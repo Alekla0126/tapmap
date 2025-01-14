@@ -1,10 +1,10 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import '../../presentation/widgets/search_bar_and_button.dart';
 import '../../domain/repositories/map_repository.dart';
+import '../../domain/controllers/map_controller.dart';
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import '../../domain/controllers/map_controller.dart';
 import '../../domain/blocs/map_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -85,7 +85,7 @@ class MapScreenState extends State<MapScreen> {
                         Factory<PanGestureRecognizer>(
                             () => PanGestureRecognizer()),
                       },
-                      accessToken: _accessToken!, // Now safe to use !
+                      accessToken: _accessToken!,
                       styleString: state.mapboxUrl,
                       initialCameraPosition: CameraPosition(
                         target: initialCameraCenter,
@@ -98,21 +98,38 @@ class MapScreenState extends State<MapScreen> {
                       onStyleLoadedCallback: () async {
                         debugPrint(
                             "Style loaded. Re-adding custom marker image...");
+
                         if (_controller != null) {
+                          // Example: Pre-load a custom marker image
                           await MapController(_controller!)
                               .addMarkerImage(_controller!);
+
                           // Remove old tap handler to avoid duplicates
                           _controller?.onSymbolTapped
                               .remove(_handleMarkerClick);
                           // Add the new tap handler
                           _controller?.onSymbolTapped.add(_handleMarkerClick);
 
-                          // Add vector tile source
-                          await MapController(_controller!)
-                              .addVectorTileSource();
-                          // Decode & place markers
-                          await MapController(_controller!)
-                              .decodeAndAddMarkersFromTile(zoom: 0, x: 0, y: 0);
+                          // (Optional) If you have vector tile or marker decoding calls:
+                          final myController =
+                              MapController(_controller!);
+                          await myController.addVectorTileSource();
+                          await myController.decodeAndAddMarkersFromTile(
+                              zoom: 0, x: 0, y: 0);
+
+                          // >>> PLACE MARKER AT USER LOCATION (IMMEDIATELY) <<<
+                          final lat = context.read<MapBloc>().state.userLocation.latitude;
+                          final lng = context.read<MapBloc>().state.userLocation.longitude;
+
+                          if (lat != 0.0 && lng != 0.0) {
+                            await myController.addMyMarker(
+                              latitude: lat,
+                              longitude: lng,
+                              pngAssetPath: 'assets/mylocation.png',
+                              iconImageId: 'mylocation_marker',
+                            );
+                            debugPrint("Placed marker at ($lat, $lng) in onStyleLoadedCallback.");
+                          }
                         }
                       },
                       onCameraIdle: () async {
@@ -156,9 +173,50 @@ class MapScreenState extends State<MapScreen> {
                   child: SearchBarAndButton(
                     scaffoldKey: _scaffoldKey,
                     onLocationSelected: _setDrawerDetails,
-                    // We can pass the existing _controller to the search bar
-                    // if you want to move the camera from inside the search logic
                     controller: _controller,
+                  ),
+                ),
+
+                // =========== ADD A FLOATING ACTION BUTTON ===========
+                Positioned(
+                  bottom: 30.0,
+                  right: 20.0,
+                  child: BlocBuilder<MapBloc, MapState>(
+                    builder: (context, state) {
+                      return FloatingActionButton(
+                        backgroundColor: Colors.indigo,
+                        onPressed: () async {
+                          if (_controller != null) {
+                            final lat = state.userLocation.latitude;
+                            final lng = state.userLocation.longitude;
+
+                            // 1) Animate camera to user's location
+                            await _controller!.animateCamera(
+                              CameraUpdate.newCameraPosition(
+                                CameraPosition(
+                                  target: mapbox.LatLng(lat, lng),
+                                  zoom: 13.0,
+                                ),
+                              ),
+                            );
+
+                            // 2) Place the marker again at user location
+                            final myController = MapController(_controller!);
+                            await myController.addMyMarker(
+                              latitude: lat,
+                              longitude: lng,
+                              pngAssetPath: 'assets/mylocation.png',
+                              iconImageId: 'mylocation_marker',
+                            );
+                            debugPrint("Placed marker at ($lat, $lng) on FAB press.");
+                          }
+                        },
+                        child: const Icon(
+                          Icons.my_location,
+                          color: Colors.white,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -202,7 +260,6 @@ class MapScreenState extends State<MapScreen> {
       final token = remoteConfig.getString('mapbox_access_token');
 
       if (token.isNotEmpty) {
-        // Assign the token to our state variable so we can use it in build
         setState(() {
           _accessToken = token;
         });
@@ -218,6 +275,8 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
+  // -------------------------------------------------------------
+  //  Symbol Tap Handler
   // -------------------------------------------------------------
   Future<void> _handleMarkerClick(Symbol symbol) async {
     final props = symbol.data;
@@ -242,7 +301,6 @@ class MapScreenState extends State<MapScreen> {
     final url = Uri.parse('https://api.tap-map.net/api/points/$id/');
     try {
       final response = await http.get(url);
-      // Print the response to the console
       debugPrint("Details for ID $id: ${utf8.decode(response.bodyBytes)}");
       if (response.statusCode == 200) {
         return json.decode(utf8.decode(response.bodyBytes))
@@ -256,6 +314,4 @@ class MapScreenState extends State<MapScreen> {
     }
     return null;
   }
-
-  // -------------------------------------------------------------
 }

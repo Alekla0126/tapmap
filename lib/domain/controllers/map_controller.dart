@@ -56,6 +56,44 @@ class MapController {
     }
   }
 
+  Future<void> addMarker(MapboxMapController controller) async {
+    try {
+      final byteData = await rootBundle.load("assets/marker.png");
+      final Uint8List imageBytes = byteData.buffer.asUint8List();
+      await controller.addImage("custom-marker", imageBytes);
+      debugPrint("Custom marker image added to style.");
+    } catch (e) {
+      debugPrint("Error loading marker image: $e");
+    }
+  }
+
+  Future<void> addMyMarker({
+    required double latitude,
+    required double longitude,
+    required String pngAssetPath, // Path to the PNG asset
+    required String iconImageId,
+  }) async {
+    try {
+      // 1) Load the raw PNG data from the asset
+      final ByteData byteData = await rootBundle.load(pngAssetPath);
+      final Uint8List pngBytes = byteData.buffer.asUint8List();
+
+      // 2) Add the image to the Mapbox style (using [iconImageId] as the name)
+      await controller.addImage(iconImageId, pngBytes);
+
+      // 3) Create a symbol at the desired location
+      await controller.addSymbol(
+        mapbox.SymbolOptions(
+          geometry: mapbox.LatLng(latitude, longitude),
+          iconImage: iconImageId, // Must match the name we passed above
+          iconSize: 0.04, // Adjust the scale if needed
+        ),
+      );
+    } catch (e) {
+      debugPrint("Error adding PNG marker: $e");
+    }
+  }
+
   Future<void> addVectorTileSource() async {
     try {
       await controller.addSource(
