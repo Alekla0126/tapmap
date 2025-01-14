@@ -21,27 +21,6 @@ class MapController {
 
   MapController(this.controller);
 
-  Future<void> initializeRemoteConfig() async {
-    try {
-      final remoteConfig = FirebaseRemoteConfig.instance;
-      await remoteConfig.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(seconds: 10),
-        minimumFetchInterval: const Duration(days: 1),
-      ));
-
-      await remoteConfig.fetchAndActivate();
-      final token = remoteConfig.getString('mapbox_access_token');
-
-      if (token.isNotEmpty) {
-        accessToken = token;
-      } else {
-        throw Exception("Mapbox access token is empty.");
-      }
-    } catch (e) {
-      throw Exception("Failed to load map configuration: $e");
-    }
-  }
-
   // -------------------------------------------------------------
   //  Marker + Vector Tile Logic
   // -------------------------------------------------------------
