@@ -55,7 +55,7 @@ class MapController {
         mapbox.SymbolOptions(
           geometry: mapbox.LatLng(latitude, longitude),
           iconImage: iconImageId, // Must match the name we passed above
-          iconSize: 0.04, // Adjust the scale if needed
+          iconSize: 0.8, // Adjust the scale if needed
         ),
       );
     } catch (e) {
