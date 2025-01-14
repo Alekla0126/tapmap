@@ -1,4 +1,5 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:tap_map_app/data/constants/api_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
@@ -6,7 +7,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'dart:convert';
 
-import 'package:tap_map_app/data/constants/api_constants.dart';
 
 class MapRepository {
   /// Fetches the Mapbox Access Token from Firebase Remote Config

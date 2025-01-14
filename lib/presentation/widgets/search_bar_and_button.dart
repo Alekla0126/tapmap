@@ -1,19 +1,19 @@
 import 'package:tap_map_app/presentation/widgets/theme_switcher.dart';
 import 'package:tap_map_app/presentation/widgets/search_bar.dart';
-import '../../domain/blocs/map_bloc.dart';
+import 'package:mapbox_gl/mapbox_gl.dart';
 import 'package:flutter/material.dart';
 
 class SearchBarAndButton extends StatelessWidget {
-  final GlobalKey<ScaffoldState> scaffoldKey;
   final Function(Map<String, dynamic>) onLocationSelected;
-  final MapBloc mapBloc; // Added this line
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final MapboxMapController? controller;
 
   const SearchBarAndButton({
-    Key? key,
+    super.key,
     required this.scaffoldKey,
     required this.onLocationSelected,
-    required this.mapBloc, // Added this parameter
-  }) : super(key: key);
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +37,7 @@ class SearchBarAndButton extends StatelessWidget {
           child: SearchBarAndResults(
             scaffoldKey: scaffoldKey,
             onLocationSelected: onLocationSelected,
-            mapBloc: mapBloc, // Passed here
+            controller: controller, // Passed here
           ),
         ),
       ],

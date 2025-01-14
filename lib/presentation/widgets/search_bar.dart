@@ -1,6 +1,4 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
-import '../../domain/blocs/map_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -9,13 +7,13 @@ import 'dart:async';
 class SearchBarAndResults extends StatefulWidget {
   final GlobalKey<ScaffoldState> scaffoldKey;
   final Function(Map<String, dynamic>) onLocationSelected;
-  final MapBloc mapBloc; // Ensure MapBloc is passed
+  final MapboxMapController? controller;
 
   const SearchBarAndResults({
     Key? key,
     required this.scaffoldKey,
     required this.onLocationSelected,
-    required this.mapBloc, // Ensure MapBloc is passed
+    required this.controller,
   }) : super(key: key);
 
   @override
@@ -129,13 +127,9 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
                         : (coordinates[1] as num).toDouble();
                     debugPrint("Moving camera to $lat, $lng");
                     // Ensure MapController is initialized before moving the camera
-                    if (widget.mapBloc.mapController != null) {
-                      widget.mapBloc.mapController!.moveCamera(
-                        CameraUpdate.newLatLng(LatLng(lat, lng)),
-                      );
-                    } else {
-                      debugPrint("MapController is not initialized. Cannot move camera.");
-                    }
+                    widget.controller!.moveCamera(
+                      CameraUpdate.newLatLng(LatLng(lat, lng)),
+                    );
                   }
                 }
                 widget.onLocationSelected(details);
@@ -145,7 +139,9 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
                   _textController.clear(); // Clears the search text
                   _searchResults.clear(); // Hides the search results
                 });
-                FocusScope.of(context).unfocus(); // Dismisses the keyboard
+                if (context.mounted) {
+                  FocusScope.of(context).unfocus(); // Dismisses the keyboard
+                }
               }
             },
           );
@@ -158,10 +154,13 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
     final url = Uri.parse('https://api.tap-map.net/api/points/$id/');
     try {
       final response = await http.get(url);
+      // Print the response to the console
+      debugPrint("Details for ID $id: ${utf8.decode(response.bodyBytes)}");
       if (response.statusCode == 200) {
-        return json.decode(response.body) as Map<String, dynamic>;
+        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
       } else {
-        debugPrint("Failed to fetch details for ID $id: ${response.statusCode}");
+        debugPrint(
+            "Failed to fetch details for ID $id: ${response.statusCode}");
       }
     } catch (e) {
       debugPrint("Error fetching details for ID $id: $e");
@@ -196,6 +195,10 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final results = data['results'] as List<dynamic>;
+
+        // Print the results to the console
+        debugPrint("Search results: $results");
+
         setState(() {
           _searchResults.addAll(results.take(5).map((item) {
             return {

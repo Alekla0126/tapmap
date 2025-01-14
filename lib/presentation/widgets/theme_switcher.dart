@@ -19,7 +19,7 @@ class _MapThemeSwitcherState extends State<MapThemeSwitcher> {
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: Colors.blue,
+        color: Colors.indigo,
         borderRadius: BorderRadius.circular(30),
       ),
       child: BlocBuilder<MapBloc, MapState>(
@@ -68,7 +68,7 @@ class _MapThemeSwitcherState extends State<MapThemeSwitcher> {
                   // Save current camera position
                   final controller = mapBloc.mapController;
                   final currentCameraPosition =
-                      await controller?.cameraPosition;
+                      controller?.cameraPosition;
 
                   debugPrint("Current camera position: $currentCameraPosition");
 
@@ -95,7 +95,7 @@ class _MapThemeSwitcherState extends State<MapThemeSwitcher> {
               ),
               dropdownStyleData: DropdownStyleData(
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.7),
+                  color: Colors.indigo.withOpacity(0.7),
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
