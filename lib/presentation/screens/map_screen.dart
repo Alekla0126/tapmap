@@ -1,5 +1,4 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import '../../presentation/widgets/search_bar_and_button.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 import '../../domain/repositories/map_repository.dart';
 import '../../domain/controllers/map_controller.dart';
@@ -8,11 +7,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
 import '../../domain/blocs/map_bloc.dart';
 import 'package:flutter/foundation.dart';
+import '../widgets/theme_switcher.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import '../widgets/search_bar.dart';
 import '../widgets/drawer.dart';
 import 'dart:convert';
+
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -111,6 +113,9 @@ class MapScreenState extends State<MapScreen> {
                       final initialCameraZoom = _savedZoom ?? 12.0;
 
                       return MapboxMap(
+                        myLocationEnabled: true,
+                        myLocationTrackingMode:
+                            MyLocationTrackingMode.TrackingCompass,
                         accessToken: _accessToken!,
                         styleString: state.mapboxUrl,
                         initialCameraPosition: CameraPosition(
@@ -124,6 +129,27 @@ class MapScreenState extends State<MapScreen> {
                         onStyleLoadedCallback: () async {
                           debugPrint("Style loaded. Checking user location...");
                           _isStyleLoaded = true;
+
+                          final lat = context
+                              .read<MapBloc>()
+                              .state
+                              .userLocation
+                              .latitude;
+                          final lng = context
+                              .read<MapBloc>()
+                              .state
+                              .userLocation
+                              .longitude;
+                          if (lat != 0.0 && lng != 0.0) {
+                            await _controller!.animateCamera(
+                              CameraUpdate.newCameraPosition(
+                                CameraPosition(
+                                  target: LatLng(lat, lng),
+                                  zoom: 14.0,
+                                ),
+                              ),
+                            );
+                          }
 
                           if (_controller != null) {
                             final myController = MapController(_controller!);
@@ -175,11 +201,6 @@ class MapScreenState extends State<MapScreen> {
                           }
                         },
 
-                        // Enable the default "blue dot" with compass heading
-                        myLocationEnabled: true,
-                        myLocationTrackingMode:
-                            MyLocationTrackingMode.TrackingCompass,
-
                         // IMPORTANT: Make sure the map doesn't swallow all pointer events.
                         gestureRecognizers: {
                           Factory<OneSequenceGestureRecognizer>(
@@ -215,10 +236,23 @@ class MapScreenState extends State<MapScreen> {
                     child: PointerInterceptor(
                       child: Material(
                         color: Colors.transparent,
-                        child: SearchBarAndButton(
-                          scaffoldKey: _scaffoldKey,
-                          onLocationSelected: _setDrawerDetails,
-                          controller: _controller,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Flexible(
+                              flex: 2,
+                              child: const MapThemeSwitcher(),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              flex: 5,
+                              child: SearchBarAndResults(
+                                onLocationSelected: _setDrawerDetails,
+                                scaffoldKey: _scaffoldKey,
+                                controller: _controller,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

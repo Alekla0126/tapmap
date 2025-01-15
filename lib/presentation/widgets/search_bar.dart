@@ -11,8 +11,8 @@ class SearchBarAndResults extends StatefulWidget {
 
   const SearchBarAndResults({
     super.key,
-    required this.onLocationSelected,
     required this.scaffoldKey,
+    required this.onLocationSelected,
     required this.controller,
   });
 
@@ -88,7 +88,7 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
+        color: Colors.white.withOpacity(0.8),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -195,6 +195,9 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       if (response.statusCode == 200) {
         final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
         var results = data['results'] as List<dynamic>;
+
+        // Print the results
+        debugPrint("Search results for '$query': $results");
 
         // Set the first 5 results to the search results
         setState(() {
