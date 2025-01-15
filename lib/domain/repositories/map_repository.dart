@@ -9,7 +9,7 @@ import 'dart:convert';
 
 
 class MapRepository {
-  /// Fetches the Mapbox Access Token from Firebase Remote Config
+  // Fetches the Mapbox Access Token from Firebase Remote Config
   Future<String?> fetchRemoteConfigAccessToken() async {
     final remoteConfig = FirebaseRemoteConfig.instance;
     await remoteConfig.setConfigSettings(RemoteConfigSettings(
@@ -24,7 +24,7 @@ class MapRepository {
     return token;
   }
 
-  /// Fetches user location using Geolocator
+  // Fetches user location using Geolocator
   Future<LatLng> fetchUserLocation() async {
     final position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
@@ -32,7 +32,7 @@ class MapRepository {
     return LatLng(position.latitude, position.longitude);
   }
 
-  /// Fetches available map styles from an API
+  // Fetches available map styles from an API
   Future<List<Map<String, String>>> fetchMapStyles() async {
     const String apiUrl = ApiConstants.styles;
     final response = await http.get(Uri.parse(apiUrl));
@@ -52,7 +52,7 @@ class MapRepository {
     }
   }
 
-  /// Fetches points from an API or uses cached data if available
+  // Fetches points from an API or uses cached data if available
   Future<List<Map<String, dynamic>>> fetchPoints() async {
     const String apiUrl = ApiConstants.featureCollection;
     final prefs = await SharedPreferences.getInstance();
@@ -92,7 +92,7 @@ class MapRepository {
     }
   }
 
-  /// Clears cached points from SharedPreferences
+  // Clears cached points from SharedPreferences
   Future<void> clearCachedPoints() async {
     final prefs = await SharedPreferences.getInstance();
     prefs.remove('cached_points');

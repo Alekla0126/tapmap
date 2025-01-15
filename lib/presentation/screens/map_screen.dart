@@ -109,11 +109,11 @@ class MapScreenState extends State<MapScreen> {
                       final initialCameraZoom = _savedZoom ?? 12.0;
 
                       return MapboxMap(
-                        gestureRecognizers: {
-                          Factory<PanGestureRecognizer>(
-                            () => PanGestureRecognizer(),
-                          ),
-                        },
+                        // gestureRecognizers: {
+                        //   Factory<PanGestureRecognizer>(
+                        //     () => PanGestureRecognizer(),
+                        //   ),
+                        // },
                         accessToken: _accessToken!,
                         styleString: state.mapboxUrl,
                         initialCameraPosition: CameraPosition(

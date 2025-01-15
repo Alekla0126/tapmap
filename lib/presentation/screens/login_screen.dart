@@ -1,6 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tap_map_app/presentation/widgets/dark_light_switch.dart';
 import '../../../domain/blocs/auth_bloc.dart';
-import '../../../domain/blocs/map_bloc.dart';
+import '../widgets/rounded_text_field.dart';
+import '../widgets/rounded_button.dart';
 import 'package:flutter/material.dart';
 import 'forgot_password.dart';
 import 'map_screen.dart';
@@ -10,6 +12,8 @@ class LoginScreen extends StatelessWidget {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
+  LoginScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Dispatch CheckTokenEvent when the screen is loaded.
@@ -18,21 +22,7 @@ class LoginScreen extends StatelessWidget {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Tap Map"),
-        actions: [
-          BlocBuilder<MapBloc, MapState>(
-            builder: (context, state) {
-              return IconButton(
-                icon: Icon(state.isDarkMode ? Icons.dark_mode : Icons.light_mode),
-                onPressed: () {
-                  context.read<MapBloc>().toggleTheme();
-                },
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: buildAppBar("Tap Map"),
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthSuccess) {
@@ -54,15 +44,13 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildRoundedTextField(
-                  context,
+                RoundedTextField(
                   controller: _emailController,
                   labelText: "Email",
                   keyboardType: TextInputType.emailAddress,
                 ),
                 const SizedBox(height: 20),
-                _buildRoundedTextField(
-                  context,
+                RoundedTextField(
                   controller: _passwordController,
                   labelText: "Password",
                   obscureText: true,
@@ -73,8 +61,7 @@ class LoginScreen extends StatelessWidget {
                     if (state is AuthLoading) {
                       return const CircularProgressIndicator();
                     }
-                    return _buildRoundedButton(
-                      context,
+                    return RoundedButton(
                       text: "Login",
                       onPressed: () {
                         final email = _emailController.text.trim();
@@ -95,14 +82,13 @@ class LoginScreen extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 20), // Add spacing between the buttons
-                _buildRoundedButton(
-                  context,
+                RoundedButton(
                   text: "Register",
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => RegisterScreen(), // Navigate to RegisterScreen
+                        builder: (context) => RegisterScreen(),
                       ),
                     );
                   },
@@ -113,7 +99,7 @@ class LoginScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ForgotPasswordScreen(), // Navigate to ForgotPasswordScreen
+                        builder: (context) => ForgotPasswordScreen(),
                       ),
                     );
                   },
@@ -128,73 +114,6 @@ class LoginScreen extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoundedTextField(
-    BuildContext context, {
-    required TextEditingController controller,
-    required String labelText,
-    TextInputType keyboardType = TextInputType.text,
-    bool obscureText = false,
-  }) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          if (!isDarkMode)
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 4,
-              offset: const Offset(0, 2), // Shadow positioning
-            ),
-        ],
-      ),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: labelText,
-          labelStyle: TextStyle(
-            color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
-          ),
-          border: InputBorder.none,
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(30),
-            borderSide: BorderSide(
-              color: isDarkMode ? Colors.tealAccent : Colors.blue,
-              width: 2,
-            ),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        ),
-        keyboardType: keyboardType,
-        obscureText: obscureText,
-      ),
-    );
-  }
-
-  Widget _buildRoundedButton(BuildContext context,
-      {required String text, required VoidCallback onPressed}) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 15),
-        ),
-        onPressed: onPressed,
-        child: Text(
-          text,
-          style: const TextStyle(fontSize: 18),
         ),
       ),
     );

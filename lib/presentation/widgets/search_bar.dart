@@ -10,11 +10,11 @@ class SearchBarAndResults extends StatefulWidget {
   final MapboxMapController? controller;
 
   const SearchBarAndResults({
-    Key? key,
-    required this.scaffoldKey,
+    super.key,
     required this.onLocationSelected,
+    required this.scaffoldKey,
     required this.controller,
-  }) : super(key: key);
+  });
 
   @override
   State<SearchBarAndResults> createState() => _SearchBarAndResultsState();

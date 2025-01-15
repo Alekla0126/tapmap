@@ -32,8 +32,8 @@ jobs:
     - name: Install dependencies
       run: flutter pub get
 
-    - name: Build the web app with WebAssembly
-      run: flutter build web --web-renderer canvaskit --base-href="${{ env.BASE_HREF }}"
+    - name: Build the web app
+      run: flutter build web --base-href="${{ env.BASE_HREF }} --profile --dart-define=Dart2jsOptimization=O0"
 
     - name: Modify built index.html to include Mapbox GL JS
       run: |

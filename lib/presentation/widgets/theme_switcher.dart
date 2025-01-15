@@ -5,7 +5,7 @@ import '../../domain/blocs/map_bloc.dart';
 import 'package:flutter/material.dart';
 
 class MapThemeSwitcher extends StatefulWidget {
-  const MapThemeSwitcher({Key? key}) : super(key: key);
+  const MapThemeSwitcher({super.key});
 
   @override
   State<MapThemeSwitcher> createState() => _MapThemeSwitcherState();

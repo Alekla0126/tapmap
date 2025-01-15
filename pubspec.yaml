@@ -54,9 +54,6 @@ dependencies:
   vector_tile: ^2.0.0
   vector_tile_renderer: ^6.0.0
   vector_map_tiles: ^9.0.0-beta.6
-  webview_flutter: ^4.10.0
-  flutter_inappwebview: ^6.1.5
-  flutter_svg: ^2.0.17
 
 dependency_overrides:
   mapbox_gl_platform_interface:

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../data/constants/api_constants.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -24,6 +25,9 @@ class ForgotPasswordEvent extends AuthEvent {
   final String email;
 
   ForgotPasswordEvent({required this.email});
+
+  @override
+  List<Object> get props => [email];
 }
 
 abstract class AuthState extends Equatable {
@@ -57,12 +61,92 @@ class AuthFailure extends AuthState {
 
 class CheckTokenEvent extends AuthEvent {}
 
+class RegisterEvent extends AuthEvent {
+  final String email;
+  final String password;
+  final String username;
+  final String firstName;
+  final String lastName;
+
+  RegisterEvent({
+    required this.email,
+    required this.password,
+    required this.username,
+    required this.firstName,
+    required this.lastName,
+  });
+
+  @override
+  List<Object?> get props => [email, password, username, firstName, lastName];
+}
+
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FlutterSecureStorage _storage = FlutterSecureStorage();
 
   AuthBloc() : super(AuthInitial()) {
-    on<LoginEvent>(_onLogin);
+    on<ForgotPasswordEvent>(_onForgotPassword);
     on<CheckTokenEvent>(_onCheckToken);
+    on<RegisterEvent>(_onRegister);
+    on<LoginEvent>(_onLogin);
+  }
+
+  // Method to handle the registration event.
+  Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+
+    final url = Uri.parse(ApiConstants.register);
+    final body = jsonEncode({
+      "email": event.email,
+      "password": event.password,
+      "username": event.username,
+      "first_name": event.firstName,
+      "last_name": event.lastName,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
+
+      // Decode the response body.
+      String decoded = utf8.decode(response.bodyBytes);
+      debugPrint(decoded);
+
+      if (response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        emit(AuthSuccess(authToken: data["auth_token"] ?? ""));
+      } else {
+        final error = utf8.decode(response.bodyBytes);
+        emit(AuthFailure(error: error));
+      }
+    } catch (e) {
+      emit(AuthFailure(error: "An error occurred: ${e.toString()}"));
+    }
+  }
+
+  // Method to handle the forgot password event.
+  Future<void> _onForgotPassword(
+      ForgotPasswordEvent event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    final url = Uri.parse(ApiConstants.forgotPassword);
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'email': event.email}),
+      );
+
+      if (response.statusCode == 200) {
+        emit(PasswordResetSuccess());
+      } else {
+        final responseBody = json.decode(response.body);
+        emit(AuthFailure(error: responseBody['error'] ?? 'Unknown error'));
+      }
+    } catch (e) {
+      emit(AuthFailure(error: e.toString()));
+    }
   }
 
   // Method to check if a token exists in storage. It is necessary to check the token
