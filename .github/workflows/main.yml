@@ -33,7 +33,7 @@ jobs:
       run: flutter pub get
 
     - name: Build the web app
-      run: flutter build web --web-renderer=canvaskit --base-href="${{ env.BASE_HREF }} "
+      run: flutter build web --web-renderer=canvaskit --base-href="${{ env.BASE_HREF }}"
 
     - name: Modify built index.html to include Mapbox GL JS
       run: |
