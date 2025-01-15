@@ -61,7 +61,7 @@ class CustomDrawer extends StatelessWidget {
           String close = closeTimes.length > j ? closeTimes[j] : '';
           periods.add('${open.substring(0, 5)} - ${close.substring(0, 5)}');
         }
-        formattedHours += periods.join(', ') + '\n';
+        formattedHours += '${periods.join(', ')}\n';
       }
     }
     return formattedHours;
@@ -296,22 +296,27 @@ class CustomDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Tags',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                          'Tags',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          ),
+                          const Divider(color: Colors.white),
+                          SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: List<Widget>.from(
+                            (drawerDetails!['properties']['tags'] as List)
+                              .map<Widget>((tag) => Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                  child: Chip(
+                                  label: Text(tag),
+                                  ),
+                                )),
                             ),
                           ),
-                          const Divider(),
-                          Wrap(
-                            spacing: 8.0,
-                            runSpacing: 4.0,
-                            children: List<Widget>.from(
-                              (drawerDetails!['properties']['tags'] as List)
-                                  .map<Widget>((tag) => Chip(
-                                        label: Text(tag),
-                                      )),
-                            ),
                           ),
                         ],
                       ),
