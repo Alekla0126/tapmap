@@ -1,5 +1,6 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import '../../presentation/widgets/search_bar_and_button.dart';
+import 'package:pointer_interceptor/pointer_interceptor.dart';
 import '../../domain/repositories/map_repository.dart';
 import '../../domain/controllers/map_controller.dart';
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
@@ -32,6 +33,7 @@ class MapScreenState extends State<MapScreen> {
   String? _accessToken;
   double? _savedZoom;
 
+  // Loading flags
   bool _isLocationDetailsLoading = false;
   bool _isStyleLoaded = false;
 
@@ -205,18 +207,19 @@ class MapScreenState extends State<MapScreen> {
                       return const SizedBox.shrink();
                     },
                   ),
-
                   // Position the search bar on top, wrapped in a Material
                   Positioned(
                     top: 20.0,
                     left: 20.0,
                     right: 50.0,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: SearchBarAndButton(
-                        scaffoldKey: _scaffoldKey,
-                        onLocationSelected: _setDrawerDetails,
-                        controller: _controller,
+                    child: PointerInterceptor(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: SearchBarAndButton(
+                          scaffoldKey: _scaffoldKey,
+                          onLocationSelected: _setDrawerDetails,
+                          controller: _controller,
+                        ),
                       ),
                     ),
                   ),
@@ -291,7 +294,8 @@ class MapScreenState extends State<MapScreen> {
         return json.decode(utf8.decode(response.bodyBytes))
             as Map<String, dynamic>;
       } else {
-        debugPrint("Failed to fetch details for ID $id: ${response.statusCode}");
+        debugPrint(
+            "Failed to fetch details for ID $id: ${response.statusCode}");
       }
     } catch (e) {
       debugPrint("Error fetching details for ID $id: $e");
