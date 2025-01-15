@@ -130,27 +130,6 @@ class MapScreenState extends State<MapScreen> {
                           debugPrint("Style loaded. Checking user location...");
                           _isStyleLoaded = true;
 
-                          final lat = context
-                              .read<MapBloc>()
-                              .state
-                              .userLocation
-                              .latitude;
-                          final lng = context
-                              .read<MapBloc>()
-                              .state
-                              .userLocation
-                              .longitude;
-                          if (lat != 0.0 && lng != 0.0) {
-                            await _controller!.animateCamera(
-                              CameraUpdate.newCameraPosition(
-                                CameraPosition(
-                                  target: LatLng(lat, lng),
-                                  zoom: 14.0,
-                                ),
-                              ),
-                            );
-                          }
-
                           if (_controller != null) {
                             final myController = MapController(_controller!);
                             await myController.addMarkerImage(_controller!);

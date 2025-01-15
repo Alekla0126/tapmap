@@ -61,7 +61,7 @@ class CustomDrawer extends StatelessWidget {
           String close = closeTimes.length > j ? closeTimes[j] : '';
           periods.add('${open.substring(0, 5)} - ${close.substring(0, 5)}');
         }
-        formattedHours += '${periods.join(', ')}\n';
+        formattedHours += periods.join(', ') + '\n';
       }
     }
     return formattedHours;
@@ -225,67 +225,67 @@ class CustomDrawer extends StatelessWidget {
                       ),
                     const SizedBox(height: 20),
 
-                    // Action Buttons
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // Call Button
-                        if (drawerDetails!['properties']['contact_info']
-                                ['phone_numbers'] !=
-                            null)
+                    // Action Buttons with horizontal scrolling, spacing, and white text
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          // Call Button
+                          if (drawerDetails!['properties']['contact_info']['phone_numbers'] != null)
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                final phones = drawerDetails!['properties']['contact_info']['phone_numbers'] ?? [];
+                                if (phones.isNotEmpty) {
+                                  _makePhoneCall(phones[0]);
+                                }
+                              },
+                                icon: const Icon(Icons.call, color: Colors.white),
+                              label: const Text('Call'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white, // Text color
+                              ),
+                            ),
+                          const SizedBox(width: 10), // Space between buttons
+
+                          // Website Button
+                          if (drawerDetails!['properties']['contact_info']['websites'] != null)
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                final websites = drawerDetails!['properties']['contact_info']['websites'] ?? [];
+                                if (websites.isNotEmpty) {
+                                  _launchURL(websites[0]);
+                                }
+                              },
+                              icon: const Icon(Icons.language, color: Colors.white),
+                              label: const Text('Website'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white, // Text color
+                              ),
+                            ),
+                          const SizedBox(width: 10), // Space between buttons
+
+                          // Directions Button
                           ElevatedButton.icon(
                             onPressed: () {
-                              final phones = drawerDetails!['properties']
-                                      ['contact_info']['phone_numbers'] ??
-                                  [];
-                              if (phones.isNotEmpty) {
-                                _makePhoneCall(phones[0]);
+                              final coords = drawerDetails!['geometry']['coordinates'];
+                              if (coords != null && coords.length >= 2) {
+                                final lat = coords[1];
+                                final lng = coords[0];
+                                final googleMapsUrl = 'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+                                _launchURL(googleMapsUrl);
                               }
                             },
-                            icon: const Icon(Icons.call),
-                            label: const Text('Call'),
+                            icon: const Icon(Icons.directions, color: Colors.white),
+                            label: const Text('Directions'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue,
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white, // Text color
                             ),
                           ),
-                        // Website Button
-                        if (drawerDetails!['properties']['contact_info']
-                                ['websites'] !=
-                            null)
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              final websites = drawerDetails!['properties']
-                                      ['contact_info']['websites'] ??
-                                  [];
-                              if (websites.isNotEmpty) {
-                                _launchURL(websites[0]);
-                              }
-                            },
-                            icon: const Icon(Icons.language),
-                            label: const Text('Website'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                            ),
-                          ),
-                        // Directions Button
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            final coords = drawerDetails!['geometry']['coordinates'];
-                            if (coords != null && coords.length >= 2) {
-                              final lat = coords[1];
-                              final lng = coords[0];
-                              final googleMapsUrl =
-                                  'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
-                              _launchURL(googleMapsUrl);
-                            }
-                          },
-                          icon: const Icon(Icons.directions),
-                          label: const Text('Directions'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 20),
 
@@ -296,27 +296,30 @@ class CustomDrawer extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                          'Tags',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                          ),
-                          const Divider(color: Colors.white),
-                          SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: List<Widget>.from(
-                            (drawerDetails!['properties']['tags'] as List)
-                              .map<Widget>((tag) => Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                                  child: Chip(
-                                  label: Text(tag),
-                                  ),
-                                )),
+                            'Tags',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
+                          const Divider(),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Wrap(
+                              spacing: 12.0, // Increased spacing between chips
+                              runSpacing: 8.0, // Increased run spacing between chips
+                              children: List<Widget>.from(
+                                (drawerDetails!['properties']['tags'] as List).map<Widget>(
+                                  (tag) => Chip(
+                                    label: Text(
+                                      tag,
+                                      style: const TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.blue, // Optional: Change chip background color
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ],
                       ),
