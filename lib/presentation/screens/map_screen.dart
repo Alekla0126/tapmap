@@ -114,7 +114,7 @@ class MapScreenState extends State<MapScreen> {
                       return MapboxMap(
                         myLocationEnabled: true,
                         myLocationTrackingMode:
-                          MyLocationTrackingMode.TrackingCompass,
+                            MyLocationTrackingMode.TrackingCompass,
                         minMaxZoomPreference: const MinMaxZoomPreference(0, 18),
                         accessToken: _accessToken!,
                         styleString: state.mapboxUrl,
@@ -248,7 +248,7 @@ class MapScreenState extends State<MapScreen> {
 
       if (token.isNotEmpty) {
         setState(() => _accessToken = token);
-        debugPrint("Mapbox access token retrieved: $token");
+        // debugPrint("Mapbox access token retrieved: $token");
       } else {
         throw Exception("Mapbox access token is empty.");
       }
@@ -273,6 +273,10 @@ class MapScreenState extends State<MapScreen> {
 
       if (details != null) {
         _setDrawerDetails(details);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to load location details.")),
+        );
       }
     }
   }

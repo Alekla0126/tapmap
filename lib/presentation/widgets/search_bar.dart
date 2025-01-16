@@ -131,6 +131,11 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
                       CameraUpdate.newLatLngZoom(LatLng(lat, lng), 16),
                     );
                   }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text("Failed to fetch location details.")),
+                  );
                 }
                 widget.onLocationSelected(details);
 
@@ -157,7 +162,8 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
       // Print the response to the console
       debugPrint("Details for ID $id: ${utf8.decode(response.bodyBytes)}");
       if (response.statusCode == 200) {
-        return json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        return json.decode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
       } else {
         debugPrint(
             "Failed to fetch details for ID $id: ${response.statusCode}");
@@ -193,7 +199,8 @@ class _SearchBarAndResultsState extends State<SearchBarAndResults> {
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        final data = json.decode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+        final data = json.decode(utf8.decode(response.bodyBytes))
+            as Map<String, dynamic>;
         var results = data['results'] as List<dynamic>;
 
         // Print the results
