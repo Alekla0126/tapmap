@@ -1,8 +1,8 @@
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/foundation.dart';
 import 'package:mapbox_gl/mapbox_gl.dart' as mapbox;
 import 'package:vector_tile/vector_tile.dart';
 import 'package:mapbox_gl/mapbox_gl.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -153,7 +153,7 @@ class MapController {
       for (final s in chunk) {
         await controller.addSymbol(s.options, s.data);
       }
-      await Future.delayed(const Duration(milliseconds: 16));
+      await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 

@@ -31,17 +31,24 @@ class _MapThemeSwitcherState extends State<MapThemeSwitcher> {
               isDense: true,
               isExpanded: true,
               value: _currentStyleName,
-              hint: const Text(
-                'Select Theme',
-                style: TextStyle(color: Colors.white),
+              hint: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _currentStyleName ?? 'Select Theme',
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
               selectedItemBuilder: (context) {
                 return styles.map((style) {
-                  return FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      style['name']!,
-                      style: const TextStyle(color: Colors.white),
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        style['name']!,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                     ),
                   );
                 }).toList();
@@ -74,6 +81,11 @@ class _MapThemeSwitcherState extends State<MapThemeSwitcher> {
 
                   // Change the style
                   mapBloc.updateStyle(styleUrl);
+
+                  // Update the current style name
+                  setState(() {
+                    _currentStyleName = value;
+                  });
 
                   // Restore camera position after style change
                   if (currentCameraPosition != null) {

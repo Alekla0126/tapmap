@@ -86,7 +86,13 @@ class MapScreenState extends State<MapScreen> {
           builder: (context) {
             return Scaffold(
               key: _scaffoldKey,
-              drawer: _buildDrawer(),
+
+              // Wrap the drawer in a Container/SizedBox that occupies 40% of the screen width
+              drawer: SizedBox(
+                width: MediaQuery.of(context).size.width * 0.4,
+                child: _buildDrawer(),
+              ),
+
               body: Stack(
                 children: [
                   BlocBuilder<MapBloc, MapState>(
@@ -185,6 +191,7 @@ class MapScreenState extends State<MapScreen> {
                       return const SizedBox.shrink();
                     },
                   ),
+
                   // Position the search bar on top, wrapped in a Material
                   Positioned(
                     top: 20.0,
@@ -248,7 +255,6 @@ class MapScreenState extends State<MapScreen> {
 
       if (token.isNotEmpty) {
         setState(() => _accessToken = token);
-        // debugPrint("Mapbox access token retrieved: $token");
       } else {
         throw Exception("Mapbox access token is empty.");
       }
