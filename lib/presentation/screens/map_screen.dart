@@ -15,7 +15,6 @@ import '../widgets/search_bar.dart';
 import '../widgets/drawer.dart';
 import 'dart:convert';
 
-
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 
@@ -115,7 +114,8 @@ class MapScreenState extends State<MapScreen> {
                       return MapboxMap(
                         myLocationEnabled: true,
                         myLocationTrackingMode:
-                            MyLocationTrackingMode.TrackingCompass,
+                          MyLocationTrackingMode.TrackingCompass,
+                        minMaxZoomPreference: const MinMaxZoomPreference(0, 18),
                         accessToken: _accessToken!,
                         styleString: state.mapboxUrl,
                         initialCameraPosition: CameraPosition(
@@ -144,28 +144,6 @@ class MapScreenState extends State<MapScreen> {
                               x: 0,
                               y: 0,
                             );
-
-                            // *** Automatic camera centering on the user's location ***
-                            final lat = context
-                                .read<MapBloc>()
-                                .state
-                                .userLocation
-                                .latitude;
-                            final lng = context
-                                .read<MapBloc>()
-                                .state
-                                .userLocation
-                                .longitude;
-                            if (lat != 0.0 && lng != 0.0) {
-                              await _controller!.animateCamera(
-                                CameraUpdate.newCameraPosition(
-                                  CameraPosition(
-                                    target: LatLng(lat, lng),
-                                    zoom: 14.0,
-                                  ),
-                                ),
-                              );
-                            }
                           }
                         },
                         onCameraIdle: () async {
