@@ -46,7 +46,6 @@ dependencies:
   mapbox_gl:
     git:
       url: https://github.com/flutter-mapbox-gl/maps.git
-  # mapbox_gl_flutterflow: ^1.0.7 
   shared_preferences: ^2.3.4
   flutter_secure_storage: ^9.2.2
   dropdown_button2: ^2.3.9
@@ -55,8 +54,8 @@ dependencies:
   vector_tile_renderer: ^6.0.0
   vector_map_tiles: ^9.0.0-beta.6
   pointer_interceptor: ^0.10.1+2
-  maplibre_gl: ^0.20.0
   url_launcher: ^6.3.1
+  universal_html: ^2.2.4
 
 dependency_overrides:
   mapbox_gl_platform_interface:
