@@ -159,7 +159,7 @@ class MapController {
 
   // Top-level function for compute()
   List<List<_SymbolData>> _chunkSymbols(List<_SymbolData> symbols) {
-    const chunkSize = 5;
+    const chunkSize = 2;
     final result = <List<_SymbolData>>[];
     for (var i = 0; i < symbols.length; i += chunkSize) {
       result.add(symbols.sublist(i, math.min(i + chunkSize, symbols.length)));
