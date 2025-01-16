@@ -147,7 +147,7 @@ class MapController {
   // Use Flutter's compute() to split symbols into chunks on a separate isolate
   Future<void> _addSymbolsInChunks(List<_SymbolData> symbols) async {
     if (symbols.isEmpty) return;
-
+    // Split symbols into chunks in a separate isolate
     final chunks = await compute(_chunkSymbols, symbols);
     for (final chunk in chunks) {
       for (final s in chunk) {
@@ -159,7 +159,7 @@ class MapController {
 
   // Top-level function for compute()
   List<List<_SymbolData>> _chunkSymbols(List<_SymbolData> symbols) {
-    const chunkSize = 2;
+    const chunkSize = 10;
     final result = <List<_SymbolData>>[];
     for (var i = 0; i < symbols.length; i += chunkSize) {
       result.add(symbols.sublist(i, math.min(i + chunkSize, symbols.length)));

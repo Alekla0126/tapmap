@@ -89,7 +89,7 @@ class MapScreenState extends State<MapScreen> {
 
               // Wrap the drawer in a Container/SizedBox that occupies 40% of the screen width
               drawer: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.4,
+                width: MediaQuery.of(context).size.width * 0.6,
                 child: _buildDrawer(),
               ),
 
