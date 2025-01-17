@@ -167,10 +167,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  // Method to save the token in secure storage.
-  void _saveToken(String token) async {
-    final _storage = FlutterSecureStorage();
-    await _storage.write(key: "auth_token", value: token);
+  // Method to save the tokens in secure storage.
+  void _saveTokens(String refresh, String access) async {
+    final storage = FlutterSecureStorage();
+    await storage.write(key: "refresh_token", value: refresh);
+    await storage.write(key: "access_token", value: access);
   }
 
   // Method to login the user.
@@ -188,14 +189,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         url,
         headers: {
           "Content-Type": "application/json",
-          "X-CSRFTOKEN": "qlQSRFBf3X8uCUiu3v8Gm4mxSIRHaozxJeC38VPop1qlwr10scB2dYTzICoOu96C",
         },
         body: body,
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        // Save the token in secure flutter storage.
-        _saveToken(data["refresh"]);
+        // Save the tokens in secure flutter storage.
+        _saveTokens(data["refresh"], data["access"]);
         emit(AuthSuccess(authToken: data["refresh"]));
       } else {
         emit(AuthFailure(error: "Invalid email or password."));
