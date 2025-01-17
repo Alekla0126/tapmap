@@ -1,5 +1,5 @@
-import requests
 from mapbox_vector_tile import decode
+import requests
 import json
 
 # Constants

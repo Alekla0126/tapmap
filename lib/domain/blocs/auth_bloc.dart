@@ -179,21 +179,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final url = Uri.parse(ApiConstants.login);
     final body = jsonEncode({
-      "email": event.email,
+      "login": event.email,
       "password": event.password,
     });
 
     try {
       final response = await http.post(
         url,
-        headers: {"Content-Type": "application/json"},
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFTOKEN": "qlQSRFBf3X8uCUiu3v8Gm4mxSIRHaozxJeC38VPop1qlwr10scB2dYTzICoOu96C",
+        },
         body: body,
       );
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         // Save the token in secure flutter storage.
-        _saveToken(data["auth_token"]);
-        emit(AuthSuccess(authToken: data["auth_token"]));
+        _saveToken(data["refresh"]);
+        emit(AuthSuccess(authToken: data["refresh"]));
       } else {
         emit(AuthFailure(error: "Invalid email or password."));
       }

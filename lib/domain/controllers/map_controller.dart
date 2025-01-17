@@ -15,7 +15,7 @@ class _SymbolData {
 }
 
 class MapController {
-  final double fetchThreshold = 50;
+  final double fetchThreshold = 20;
   MapboxMapController controller;
   String? accessToken;
   LatLng? lastCenter;

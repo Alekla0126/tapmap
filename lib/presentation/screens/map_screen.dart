@@ -89,7 +89,7 @@ class MapScreenState extends State<MapScreen> {
 
               // Wrap the drawer in a Container/SizedBox that occupies 40% of the screen width
               drawer: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.6,
+                width: MediaQuery.of(context).size.width * 0.5,
                 child: _buildDrawer(),
               ),
 
@@ -142,7 +142,6 @@ class MapScreenState extends State<MapScreen> {
                             _controller?.onSymbolTapped
                                 .remove(_handleMarkerClick);
                             _controller?.onSymbolTapped.add(_handleMarkerClick);
-
                             // Add custom vector tile layers, etc.
                             await myController.addVectorTileSource();
                             await myController.decodeAndAddMarkersFromTile(
